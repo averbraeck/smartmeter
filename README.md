@@ -15,5 +15,5 @@ and chart.js for displaying the graphs (see https://www.chartjs.org/).
 
 **Notes** 
 - The project is in development, and might not always work.
-- The project is targeted for my setup (power, meter type, Pi, user accounts, etc), and might need changes for the specific settings
-of another user.
+- The project is targeted for my setup (power type, meter type, Raspberry Pi, user accounts, etc), and might need changes for 
+the specific settings of another user.
