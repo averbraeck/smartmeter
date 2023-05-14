@@ -12,3 +12,8 @@ The Java code in this project sets up a web server on port 3000, and shows a das
 current day, totals for the past 30 days, and totals for the past 12 months. It uses nnoHTTPD to set-up the web server (see
 https://github.com/NanoHttpd/nanohttpd for the project), bootstrap 3.4.1 for the look-and-feel (see https://getbootstrap.com/docs/3.4/),
 and chart.js for displaying the graphs (see https://www.chartjs.org/). 
+
+**Notes** 
+- The project is in development, and might not always work.
+- The project is targeted for my setup (power, meter type, Pi, user accounts, etc), and might need changes for the specific settings
+of another user.
