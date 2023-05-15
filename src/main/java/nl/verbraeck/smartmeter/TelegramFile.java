@@ -12,24 +12,28 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
- * TelegramFile.java.
+ * TelegramFile contains methods to read telegram files for today, a given date, the last 30 days before a given date, and the
+ * last 12 months before a given date.
  * <p>
- * Copyright (c) 2020-2020 Delft University of Technology, PO Box 5, 2600 AA, Delft, the Netherlands. All rights reserved. <br>
- * BSD-style license. See <a href="https://opentrafficsim.org/docs/current/license.html">OpenTrafficSim License</a>.
+ * Copyright (c) 2020-2023 Alexnder Verbraeck, Delft, the Netherlands. All rights reserved. <br>
+ * MIT-license.
  * </p>
  * @author <a href="https://github.com/averbraeck">Alexander Verbraeck</a>
  */
 public class TelegramFile
 {
-    private static String defaultFolder = "E:/jar/meter";
-    // private static String defaultFolder = "/home/alexandv/meter";
 
+    /**
+     * Read all telegrams (max 1440) for today (or for the last saved date when no new files are added).
+     * @return SortedMap&lt;String, Telegram&gt;; the sorted map with the date and time as the key (formatted as "yyyyMMdd
+     *         HH:mm") to the corresponding Telegram
+     */
     public static SortedMap<String, Telegram> getTodayTelegrams()
     {
         SortedMap<String, Telegram> telegramMap = new TreeMap<>();
         try
         {
-            File dir = new File(defaultFolder);
+            File dir = new File(Constants.LOCAL_FOLDER);
             final TreeMap<String, File> fileMap = new TreeMap<>();
             dir.listFiles(new FilenameFilter()
             {
@@ -37,7 +41,7 @@ public class TelegramFile
                 public boolean accept(final File folder, final String name)
                 {
                     File file = new File(folder, name);
-                    if (file.isFile() && name.endsWith(".txt"))
+                    if (file.isFile() && name.endsWith(Constants.FILE_SUFFIX))
                     {
                         fileMap.put(name, file);
                         return true;
@@ -81,11 +85,15 @@ public class TelegramFile
         return telegramMap;
     }
 
+    /**
+     * Read the last Telegram that was saved for today (the current minute if cron job is running).
+     * @return Telegram; the last Telegram that was saved for today
+     */
     public static Telegram getLastTelegram()
     {
         try
         {
-            File dir = new File(defaultFolder);
+            File dir = new File(Constants.LOCAL_FOLDER);
             final TreeMap<String, File> fileMap = new TreeMap<>();
             dir.listFiles(new FilenameFilter()
             {
@@ -93,7 +101,7 @@ public class TelegramFile
                 public boolean accept(final File folder, final String name)
                 {
                     File file = new File(folder, name);
-                    if (file.isFile() && name.endsWith(".txt"))
+                    if (file.isFile() && name.endsWith(Constants.FILE_SUFFIX))
                     {
                         fileMap.put(name, file);
                         return true;
@@ -130,13 +138,20 @@ public class TelegramFile
         }
     }
 
+    /**
+     * Read all telegrams (max 1440) for the given date. In case there are no telegrams for the given date, return the telegrams
+     * for the last date when telegrams were saved.
+     * @param date LocalDate; the date for which the Telegrams should be retrieved
+     * @return SortedMap&lt;String, Telegram&gt;; the sorted map with the date and time as the key (formatted as "yyyyMMdd
+     *         HH:mm") to the corresponding Telegram
+     */
     public static SortedMap<String, Telegram> getDayTelegrams(final LocalDate date)
     {
         SortedMap<String, Telegram> telegramMap = new TreeMap<>();
         try
         {
-            File dir = new File(defaultFolder);
-            File file = new File(dir, "meter_" + date.toString() + ".txt");
+            File dir = new File(Constants.LOCAL_FOLDER);
+            File file = new File(dir, Constants.FILE_PREFIX + date.toString() + Constants.FILE_SUFFIX);
             if (file == null || !file.exists())
             {
                 return getTodayTelegrams();
@@ -171,18 +186,25 @@ public class TelegramFile
         }
         catch (Exception e)
         {
-            System.err.println("error in getTodayTelegrams(): " + e.getMessage());
+            System.err.println("error in getDayTelegrams(): " + e.getMessage());
         }
 
         return telegramMap;
     }
 
+    /**
+     * Read all telegrams (max 1440) for the given date. In case there are no telegrams for the given date, return the telegrams
+     * relative to the last date when telegrams were saved.
+     * @param days int; the number of days for which the Telegrams should be retrieved
+     * @return SortedMap&lt;String, Telegram&gt;; the sorted map with the date and time as the key (formatted as "yyyyMMdd
+     *         HH:mm") to the corresponding Telegram
+     */
     public static List<Telegram> getDaysTelegrams(final int days)
     {
         List<Telegram> telegramList = new ArrayList<>();
         try
         {
-            File dir = new File(defaultFolder);
+            File dir = new File(Constants.LOCAL_FOLDER);
             final TreeMap<String, File> fileMap = new TreeMap<>();
             dir.listFiles(new FilenameFilter()
             {
@@ -190,7 +212,7 @@ public class TelegramFile
                 public boolean accept(final File folder, final String name)
                 {
                     File file = new File(folder, name);
-                    if (file.isFile() && name.endsWith(".txt"))
+                    if (file.isFile() && name.endsWith(Constants.FILE_SUFFIX))
                     {
                         fileMap.put(name, file);
                         return true;
@@ -245,7 +267,7 @@ public class TelegramFile
         List<Telegram> telegramList = new ArrayList<>();
         try
         {
-            File dir = new File(defaultFolder);
+            File dir = new File(Constants.LOCAL_FOLDER);
             final TreeMap<String, File> fileMap = new TreeMap<>();
             dir.listFiles(new FilenameFilter()
             {
@@ -253,7 +275,7 @@ public class TelegramFile
                 public boolean accept(final File folder, final String name)
                 {
                     File file = new File(folder, name);
-                    if (file.isFile() && name.endsWith(".txt"))
+                    if (file.isFile() && name.endsWith(Constants.FILE_SUFFIX))
                     {
                         fileMap.put(name, file);
                         return true;
@@ -266,7 +288,7 @@ public class TelegramFile
             LocalDate date = LocalDate.of(now.getYear(), now.getMonth(), 1);
             for (int i = 0; i < months; i++)
             {
-                String fn = "meter_" + date.toString();
+                String fn = Constants.FILE_PREFIX + date.toString();
                 File file = fileMap.ceilingEntry(fn).getValue();
                 List<String> lines = Files.readAllLines(Path.of(file.getAbsolutePath()));
                 List<String> telegramLines = new ArrayList<>();

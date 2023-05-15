@@ -153,7 +153,7 @@ public class Telegram
     public double gasDeliveredM3;
 
     /**
-     * @return the date and time as yyyyMMddHHmm
+     * @return the date and time as yyyyMMdd HH:mm
      */
     public String getDateTime()
     {

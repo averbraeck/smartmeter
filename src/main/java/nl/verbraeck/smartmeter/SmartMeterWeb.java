@@ -21,6 +21,22 @@ import fi.iki.elonen.NanoHTTPD.Response.Status;
 import nl.verbraeck.smartmeter.chart.BarChart;
 import nl.verbraeck.smartmeter.chart.LineChart;
 
+/**
+ * Main program to serve a request from the browser. The following requests are served:<br>
+ * <ul>
+ * <li><code>https://server.ip/</code> to request the overview page that is always for today.</li>
+ * <li><code>https://server.ip/electricity</code> to request the electricity overview.</li>
+ * <li><code>https://server.ip/gas</code> to request the gas overview.</li>
+ * <li><code>https://server.ip/comparison</code> to request the comparison of this period with previous periods.</li>
+ * <li>The suffix <code>?date=yyyy-mm-dd</code> indicates the date for which the page is shown. No date means today.</li>
+ * </ul>
+ * Most methods in this class are static, since we cannot keep state between re
+ * <p>
+ * Copyright (c) 2020-2023 Alexnder Verbraeck, Delft, the Netherlands. All rights reserved. <br>
+ * MIT-license.
+ * </p>
+ * @author <a href="https://github.com/averbraeck">Alexander Verbraeck</a>
+ */
 public class SmartMeterWeb extends NanoHTTPD
 {
     public SmartMeterWeb() throws IOException
