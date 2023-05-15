@@ -168,19 +168,6 @@ public class SmartMeterWeb extends NanoHTTPD
         }
     }
 
-    private String blank()
-    {
-        System.out.println("Error 404");
-        StringBuilder msg = new StringBuilder();
-        msg.append("<!DOCTYPE html>\n<meta charset=\"UTF-8\">\n");
-        msg.append("<html><head><title>SmartMeter</title></head>\n");
-        msg.append("<body><h1>SmartMeter</h1>\n");
-        msg.append("404 Page not found<br>\n");
-        msg.append("<br><a href='/'>Main screen</a><br>\n");
-        msg.append("</body></html>\n");
-        return msg.toString();
-    }
-
     private String overview()
     {
         System.out.println("loaded page /");
