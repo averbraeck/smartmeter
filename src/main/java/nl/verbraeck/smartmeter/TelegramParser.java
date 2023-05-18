@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * TelegramParser parses a telegram. A Telegram contains one P1-message from the smart meter. E.g.,
- * 
+ *
  * <pre>
  * /XMX5LGBBLA4415473347
  * 1-3:0.2.8(50)                                    Version information for P1 output (String)
@@ -32,7 +32,7 @@ import java.util.List;
  * 1-0:22.7.0(00.000*kW)                            Instantaneous active power L1 (-P) in W resolution
  * 0-1:24.1.0(003)                                  Device-Type
  * 0-1:96.1.0(4730303339303031383033353931323138)   Equipment identifier (Gas)
- * 0-1:24.2.1(230505000003S)(05125.733*m3)          Last 5-minute value (temperature converted), gas delivered to client 
+ * 0-1:24.2.1(230505000003S)(05125.733*m3)          Last 5-minute value (temperature converted), gas delivered to client
  *                                                  in m3, including decimal values and capture time
  * !F07C
  * </pre>

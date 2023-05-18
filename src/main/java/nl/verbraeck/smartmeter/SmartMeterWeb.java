@@ -47,7 +47,7 @@ public class SmartMeterWeb extends NanoHTTPD
     }
 
     @Override
-    public Response serve(IHTTPSession session)
+    public Response serve(final IHTTPSession session)
     {
         String uri = session.getUri();
         Map<String, String> parms = session.getParms();
@@ -461,7 +461,7 @@ public class SmartMeterWeb extends NanoHTTPD
         return framework.replace("<!-- #content -->", msg.toString());
     }
 
-    private LineChart powerDay(SortedMap<String, Telegram> dayMap, String name)
+    private LineChart powerDay(final SortedMap<String, Telegram> dayMap, final String name)
     {
         LineChart powerChart = new LineChart(name);
         List<Double> xList = new ArrayList<>();
@@ -495,11 +495,11 @@ public class SmartMeterWeb extends NanoHTTPD
             yList.add(0.0);
         }
         powerChart.setWidth("100%").setX(xList).setY(yList).setLabel("Power (kW)").setMax(1440.0).setTicks(60).setHours(true)
-                .setFill(true).setFillColor("red");
+        .setFill(true).setFillColor("red");
         return powerChart;
     }
 
-    private LineChart cumulativePowerDay(SortedMap<String, Telegram> dayMap, String name)
+    private LineChart cumulativePowerDay(final SortedMap<String, Telegram> dayMap, final String name)
     {
         LineChart powerChart = new LineChart(name);
         List<Double> xList = new ArrayList<>();
@@ -539,11 +539,11 @@ public class SmartMeterWeb extends NanoHTTPD
             yList.add(cumEnergy);
         }
         powerChart.setWidth("100%").setX(xList).setY(yList).setLabel("Power (kW)").setMax(1440.0).setTicks(60).setHours(true)
-                .setFill(false);
+        .setFill(false);
         return powerChart;
     }
 
-    private LineChart gasDay(SortedMap<String, Telegram> dayMap, String name)
+    private LineChart gasDay(final SortedMap<String, Telegram> dayMap, final String name)
     {
         LineChart gasChart = new LineChart(name);
         List<Double> xList = new ArrayList<>();
@@ -582,11 +582,11 @@ public class SmartMeterWeb extends NanoHTTPD
             yList.add(0.0);
         }
         gasChart.setWidth("100%").setX(xList).setY(yList).setLabel("Gas (m3)").setMax(1440.0).setTicks(60).setHours(true)
-                .setFill(true).setFillColor("red");
+        .setFill(true).setFillColor("red");
         return gasChart;
     }
 
-    private LineChart cumulativeGasDay(SortedMap<String, Telegram> dayMap, String name)
+    private LineChart cumulativeGasDay(final SortedMap<String, Telegram> dayMap, final String name)
     {
         LineChart gasChart = new LineChart(name);
         List<Double> xList = new ArrayList<>();
@@ -623,11 +623,11 @@ public class SmartMeterWeb extends NanoHTTPD
             yList.add(lastGas - firstGas);
         }
         gasChart.setWidth("100%").setX(xList).setY(yList).setLabel("Gas (m3)").setMax(1440.0).setTicks(60).setHours(true)
-                .setFill(false).setFillColor("blue");
+        .setFill(false).setFillColor("blue");
         return gasChart;
     }
 
-    private LineChart voltageDay(SortedMap<String, Telegram> dayMap, String name)
+    private LineChart voltageDay(final SortedMap<String, Telegram> dayMap, final String name)
     {
         LineChart voltageChart = new LineChart(name);
         List<Double> xList = new ArrayList<>();
@@ -661,11 +661,11 @@ public class SmartMeterWeb extends NanoHTTPD
             yList.add(Double.NaN);
         }
         voltageChart.setWidth("100%").setX(xList).setY(yList).setLabel("Voltage L1 (V)").setMax(1440.0).setTicks(60)
-                .setHours(true).setFill(false).setFillColor("green");
+        .setHours(true).setFill(false).setFillColor("green");
         return voltageChart;
     }
 
-    private BarChart energyPerHourDay(SortedMap<String, Telegram> dayMap, String name)
+    private BarChart energyPerHourDay(final SortedMap<String, Telegram> dayMap, final String name)
     {
         BarChart powerChart = new BarChart(name);
         List<String> xList = new ArrayList<>();

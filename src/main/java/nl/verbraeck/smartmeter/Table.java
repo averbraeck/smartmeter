@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Store and format a 2-column table in HTML. 
+ * Store and format a 2-column table in HTML.
  * <p>
  * Copyright (c) 2020-2023 Alexnder Verbraeck, Delft, the Netherlands. All rights reserved. <br>
- * MIT-license. 
+ * MIT-license.
  * </p>
  * @author <a href="https://github.com/averbraeck">Alexander Verbraeck</a>
  */
@@ -16,7 +16,7 @@ public class Table
     /** the keys of the table, in order of display. */
     List<String> keys = new ArrayList<>();
 
-    /** the values of the table, in order of display. */ 
+    /** the values of the table, in order of display. */
     List<String> values = new ArrayList<>();
 
     /**
@@ -31,7 +31,7 @@ public class Table
     }
 
     /**
-     * Add a row with two column values, where the 2nd column has a unit. The unit will be attached as '[unit]' to the value. 
+     * Add a row with two column values, where the 2nd column has a unit. The unit will be attached as '[unit]' to the value.
      * @param key String; the key in column 1
      * @param value String; the value in column 2
      * @param unit String; the unit of the value in column 2
@@ -43,7 +43,7 @@ public class Table
     }
 
     /**
-     * Add a row with two column values, where the 2nd column has a unit. The unit will be attached as '[unit]' to the value. 
+     * Add a row with two column values, where the 2nd column has a unit. The unit will be attached as '[unit]' to the value.
      * @param key String; the key in column 1
      * @param value double; the value in column 2
      * @param unit String; the unit of the value in column 2
@@ -54,7 +54,7 @@ public class Table
     }
 
     /**
-     * Add a row with two column values, where the 2nd column has a unit. The unit will be attached as '[unit]' to the value. 
+     * Add a row with two column values, where the 2nd column has a unit. The unit will be attached as '[unit]' to the value.
      * @param key String; the key in column 1
      * @param value double; the value in column 2
      * @param unit String; the unit of the value in column 2
@@ -65,7 +65,7 @@ public class Table
     }
 
     /**
-     * Add a row with two column values, where the 2nd column has a unit. The unit will be attached as '[unit]' to the value. 
+     * Add a row with two column values, where the 2nd column has a unit. The unit will be attached as '[unit]' to the value.
      * @param key String; the key in column 1
      * @param value int; the value in column 2
      * @param unit String; the unit of the value in column 2
@@ -76,7 +76,7 @@ public class Table
     }
 
     /**
-     * Add a row with two column values, where the 2nd column has a unit. The unit will be attached as '[unit]' to the value. 
+     * Add a row with two column values, where the 2nd column has a unit. The unit will be attached as '[unit]' to the value.
      * @param key String; the key in column 1
      * @param value int; the value in column 2
      * @param unit String; the unit of the value in column 2

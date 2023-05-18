@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * Telegram contains one P1-message from the smart meter. E.g., based on:
- * 
+ *
  * <pre>
  * /XMX5LGBBLA4415473347
  * 1-3:0.2.8(50)
@@ -76,31 +76,31 @@ public class Telegram
 
     /** 0-0:96.7.21 number of power failures in any phase, e.g. (00003). */
     public int powerFailuresAnyPhase;
-    
+
     /** 0-0:96.7.9 number of long power failures in any phase, e.g. (00000). */
     public int longPowerFailuresAnyPhase;
 
     /** 1-0:32.32.0 number of voltage sags in phase L1, e.g. (00011). */
     public int voltageSagsL1;
-    
+
     /** 1-0:52.32.0 number of voltage sags in phase L2, e.g. (00000). */
     public int voltageSagsL2;
-    
+
     /** 1-0:72.32.0 number of voltage sags in phase L3, e.g. (00000). */
     public int voltageSagsL3;
-    
+
     /** 1-0:32.36.0 number of voltage swells in phase L1, e.g. (00000). */
     public int voltageSwellsL1;
-    
+
     /** 1-0:52.36.0 number of voltage swells in phase L2, e.g. (00000). */
     public int voltageSwellsL2;
-    
+
     /** 1-0:72.36.0 number of voltage swells in phase L3, e.g. (00000). */
     public int voltageSwellsL3;
-    
+
     /** 0-0:96.13.0 text message. */
     public String textMessage = "";
-    
+
     /** 1-0:32.7.0 instantaneous voltage L1, e.g. (221.0*V). */
     public double voltageL1;
 
@@ -139,7 +139,7 @@ public class Telegram
 
     /** 0-1:24.1.0 device type id, e.g. (003). */
     public int gasDeviceTypeId;
-    
+
     /** 0-1:96.1.0 gas meter id in hex, e.g. (4730303339303031383033353931323138). */
     public String gasMeterId = "";
 

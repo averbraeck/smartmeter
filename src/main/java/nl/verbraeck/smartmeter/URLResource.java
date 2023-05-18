@@ -9,13 +9,12 @@ import java.net.PasswordAuthentication;
 import java.net.URL;
 
 /**
- * 
  * The URLResource class helps to resolve a file location in a project, JAR, or folder. The static methods return a URL of the
  * file location that was found, or null in case it was not found. It can find data in password protected locations, and when the
  * data has been moved to /resources instead of residing in the root folder.
  * <p>
  * Copyright (c) 2020-2023 Alexnder Verbraeck, Delft, the Netherlands. All rights reserved. <br>
- * MIT-license. 
+ * MIT-license.
  * </p>
  * @author <a href="https://github.com/averbraeck">Alexander Verbraeck</a>
  */
