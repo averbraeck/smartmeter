@@ -258,7 +258,7 @@ public class TelegramFile
     }
 
     /**
-     * Return a list ofthe first telegram of the first of the month for the past x months.
+     * Return a list of the first telegram of the first of the month for the past x months.
      * @param months int; the number of months to retrieve.
      * @return List of Telegrams for the given number of months; oldest first.
      */
