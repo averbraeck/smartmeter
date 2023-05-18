@@ -43,6 +43,11 @@ import java.util.List;
  */
 public class TelegramParser
 {
+    /**
+     * Parse the telegram into a telegram record.
+     * @param lines List of strings containing telegram data
+     * @return Telegram; a parsed telegram
+     */
     public static Telegram parseTelegram(final List<String> lines)
     {
         Telegram telegram = new Telegram();
@@ -140,6 +145,12 @@ public class TelegramParser
 
     }
 
+    /**
+     * Parse an integer from the telegram line. The line is formatted, e.g., as <code>0-0:96.14.0(0001)</code>. The int is
+     * enclosed between brackets.
+     * @param line The line to parse
+     * @return int; the parsed integer value
+     */
     private static int parseInt(final String line)
     {
         int bo = line.indexOf('(');
@@ -158,6 +169,13 @@ public class TelegramParser
         }
     }
 
+    /**
+     * Parse a floating point value with a unit from the telegram line. The line is formatted, e.g., as
+     * <code>1-0:1.7.0(02.327*kW)</code>. The floating point value and unit are enclosed between brackets. The unit is stored
+     * after the asterisk.
+     * @param line The line to parse
+     * @return double; the parsed floating point value
+     */
     private static double parseFloatUnit(final String line)
     {
         int bo = line.indexOf('(');
@@ -176,6 +194,13 @@ public class TelegramParser
         }
     }
 
+    /**
+     * Parse a floating point value with a unit from the telegram line. The line is formatted, e.g., as
+     * <code>0-1:24.2.1(230505000003S)(05125.733*m3)</code>. The floating point value and unit are enclosed between the second
+     * pair of brackets. The unit is stored after the asterisk.
+     * @param line The line to parse
+     * @return double; the parsed floating point value
+     */
     private static double parseFloatUnit2(final String line)
     {
         int bo = line.indexOf('(', line.indexOf('(') + 1);
@@ -194,6 +219,12 @@ public class TelegramParser
         }
     }
 
+    /**
+     * Parse a hexadecimal value from the telegram line. The line is formatted, e.g., as
+     * <code>0-1:96.1.0(4730303339303031383033353931323138)</code>. The hexadecimal value is enclosed between brackets.
+     * @param line The line to parse
+     * @return String; the parsed hexadecimal string value
+     */
     private static String parseHex(final String line)
     {
         int bo = line.indexOf('(');
@@ -210,6 +241,12 @@ public class TelegramParser
         return result.toString();
     }
 
+    /**
+     * Parse a date value from the telegram line. The line is formatted, e.g., as <code>0-0:1.0.0(230505000259S)</code>. The
+     * date (and time) value is enclosed between brackets, and formatted as YYMMDDhhmmssX.
+     * @param line The line to parse
+     * @return LocalDate; the parsed date value
+     */
     private static LocalDate parseDate(final String line)
     {
         int bo = line.indexOf('(');
@@ -226,6 +263,12 @@ public class TelegramParser
         }
     }
 
+    /**
+     * Parse a time value from the telegram line. The line is formatted, e.g., as <code>0-0:1.0.0(230505000259S)</code>. The
+     * time (and date) value is enclosed between brackets, and formatted as YYMMDDhhmmssX.
+     * @param line The line to parse
+     * @return LocalTime; the parsed time value
+     */
     private static LocalTime parseTime(final String line)
     {
         int bo = line.indexOf('(');
