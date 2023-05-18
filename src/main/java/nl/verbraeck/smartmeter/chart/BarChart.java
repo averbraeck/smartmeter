@@ -3,16 +3,33 @@ package nl.verbraeck.smartmeter.chart;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Formatting a data series as a bar chart in the browser, using the chart.js library.
+ * <p>
+ * Copyright (c) 2020-2023 Alexnder Verbraeck, Delft, the Netherlands. All rights reserved. <br>
+ * MIT-license.
+ * </p>
+ * @author <a href="https://github.com/averbraeck">Alexander Verbraeck</a>
+ */
 public class BarChart
 {
+    /** the name of the chart, to be used in the HTML code to link the javascript and the placeholder. */
     private final String chartName;
+
+    /** the label to print at the top of the chart. */
     private String label;
-    private String width="100%";
+
+    /** the width to use in the current element. */
+    private String width = "100%";
+
+    /** the labels to use for the x-axis. */
     private List<String> labels = new ArrayList<>();
+
+    /** the heights of the bars, where each value belongs to a label with the same index. */
     private List<Double> values = new ArrayList<>();
-    
+
     /**
-     * Make a barchart in a div.
+     * Make a barchart in a div, where the name is used in the HTML code to link the javascript and the placeholder.
      * @param chartName unique name of the chart in the HTML file
      */
     public BarChart(final String chartName)
@@ -31,7 +48,7 @@ public class BarChart
         msg.append("    type: 'bar',\n");
         msg.append("    data: {\n");
         msg.append("      labels: [");
-        for (int i=0; i < this.labels.size(); i++)
+        for (int i = 0; i < this.labels.size(); i++)
         {
             if (i > 0)
                 msg.append(", ");
@@ -47,7 +64,7 @@ public class BarChart
         msg.append("        backgroundColor: 'red',\n");
         msg.append("        borderColor: 'black',\n");
         msg.append("        data: [");
-        for (int i=0; i < this.labels.size(); i++)
+        for (int i = 0; i < this.labels.size(); i++)
         {
             if (i > 0)
                 msg.append(", ");
@@ -98,28 +115,48 @@ public class BarChart
         return msg.toString();
     }
 
-    public BarChart setWidth(String width)
+    /**
+     * Set the width to change it from the default 100%. The method calls can be chained.
+     * @param width String; the new width to use (as px, %, or other HTML5 unit).
+     * @return BarChart for chaining the method calls
+     */
+    public BarChart setWidth(final String width)
     {
         this.width = width;
         return this;
     }
 
-    public BarChart setLabels(List<String> labels)
+    /**
+     * Set the labels for the bar chart. The method calls can be chained.
+     * @param labels List&lt;String&gt;; the labels to use for the x-axis
+     * @return BarChart for chaining the method calls
+     */
+    public BarChart setLabels(final List<String> labels)
     {
         this.labels = labels;
         return this;
     }
 
-    public BarChart setValues(List<Double> values)
+    /**
+     * Set the bar heights for the bar chart. The method calls can be chained.
+     * @param values List&lt;String&gt;; the bar heights to use for the chart; each value belongs to a label with the same index
+     * @return BarChart for chaining the method calls
+     */
+    public BarChart setValues(final List<Double> values)
     {
         this.values = values;
         return this;
     }
-    
-    public BarChart setLabel(String label)
+
+    /**
+     * Set the title of the bar chart, to be printed at the top. The method calls can be chained.
+     * @param label String; the title of the bar chart, to be printed at the top
+     * @return BarChart for chaining the method calls
+     */
+    public BarChart setLabel(final String label)
     {
         this.label = label;
         return this;
     }
-    
+
 }
