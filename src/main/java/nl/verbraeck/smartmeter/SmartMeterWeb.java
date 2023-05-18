@@ -494,7 +494,7 @@ public class SmartMeterWeb extends NanoHTTPD
             xList.add(minutes);
             yList.add(0.0);
         }
-        powerChart.setWidth("100%").setX(xList).setY(yList).setLabel("Power (kW)").setMax(1440.0).setTicks(60).setHours(true)
+        powerChart.setWidth("100%").setX(xList).setY(yList).setTitle("Power (kW)").setMax(1440.0).setTickStepSize(60).setHours(true)
         .setFill(true).setFillColor("red");
         return powerChart;
     }
@@ -538,7 +538,7 @@ public class SmartMeterWeb extends NanoHTTPD
             xList.add(minutes);
             yList.add(cumEnergy);
         }
-        powerChart.setWidth("100%").setX(xList).setY(yList).setLabel("Power (kW)").setMax(1440.0).setTicks(60).setHours(true)
+        powerChart.setWidth("100%").setX(xList).setY(yList).setTitle("Power (kW)").setMax(1440.0).setTickStepSize(60).setHours(true)
         .setFill(false);
         return powerChart;
     }
@@ -581,7 +581,7 @@ public class SmartMeterWeb extends NanoHTTPD
             xList.add(minutes);
             yList.add(0.0);
         }
-        gasChart.setWidth("100%").setX(xList).setY(yList).setLabel("Gas (m3)").setMax(1440.0).setTicks(60).setHours(true)
+        gasChart.setWidth("100%").setX(xList).setY(yList).setTitle("Gas (m3)").setMax(1440.0).setTickStepSize(60).setHours(true)
         .setFill(true).setFillColor("red");
         return gasChart;
     }
@@ -622,7 +622,7 @@ public class SmartMeterWeb extends NanoHTTPD
             xList.add(minutes);
             yList.add(lastGas - firstGas);
         }
-        gasChart.setWidth("100%").setX(xList).setY(yList).setLabel("Gas (m3)").setMax(1440.0).setTicks(60).setHours(true)
+        gasChart.setWidth("100%").setX(xList).setY(yList).setTitle("Gas (m3)").setMax(1440.0).setTickStepSize(60).setHours(true)
         .setFill(false).setFillColor("blue");
         return gasChart;
     }
@@ -660,7 +660,7 @@ public class SmartMeterWeb extends NanoHTTPD
             xList.add(minutes);
             yList.add(Double.NaN);
         }
-        voltageChart.setWidth("100%").setX(xList).setY(yList).setLabel("Voltage L1 (V)").setMax(1440.0).setTicks(60)
+        voltageChart.setWidth("100%").setX(xList).setY(yList).setTitle("Voltage L1 (V)").setMax(1440.0).setTickStepSize(60)
         .setHours(true).setFill(false).setFillColor("green");
         return voltageChart;
     }
@@ -709,7 +709,7 @@ public class SmartMeterWeb extends NanoHTTPD
                 System.out.println("Date: " + entry.getValue().date + " not equal to first date: " + date);
             }
         }
-        powerChart.setWidth("100%").setLabels(xList).setValues(yList).setLabel("Energy (kWh)");
+        powerChart.setWidth("100%").setLabels(xList).setValues(yList).setTtile("Energy (kWh)");
         return powerChart;
     }
 
@@ -754,7 +754,7 @@ public class SmartMeterWeb extends NanoHTTPD
         tariff1List.add(t2);
         totalList.add(t1 + t2);
 
-        powerChart.setWidth("100%").setLabel("Power (kW)").setLabels(labelList).setValues(totalList);
+        powerChart.setWidth("100%").setTtile("Power (kW)").setLabels(labelList).setValues(totalList);
         return powerChart;
     }
 
@@ -799,7 +799,7 @@ public class SmartMeterWeb extends NanoHTTPD
         tariff1List.add(t2);
         totalList.add(t1 + t2);
 
-        powerChart.setWidth("100%").setLabel("Power (kW)").setLabels(labelList).setValues(totalList);
+        powerChart.setWidth("100%").setTtile("Power (kW)").setLabels(labelList).setValues(totalList);
         return powerChart;
     }
 
@@ -829,7 +829,7 @@ public class SmartMeterWeb extends NanoHTTPD
         labelList.add(lastTelegram.date.toString());
         valueList.add(lastTelegram.gasDeliveredM3 - prevGas);
 
-        gasChart.setWidth("100%").setLabels(labelList).setValues(valueList).setLabel("Gas (m3)");
+        gasChart.setWidth("100%").setLabels(labelList).setValues(valueList).setTtile("Gas (m3)");
         return gasChart;
     }
 
@@ -862,7 +862,7 @@ public class SmartMeterWeb extends NanoHTTPD
         double gas = lastTelegram.gasDeliveredM3 - prevGas;
         gasList.add(gas);
 
-        gasChart.setWidth("100%").setLabel("Gas (m3)").setLabels(labelList).setValues(gasList);
+        gasChart.setWidth("100%").setTtile("Gas (m3)").setLabels(labelList).setValues(gasList);
         return gasChart;
     }
 

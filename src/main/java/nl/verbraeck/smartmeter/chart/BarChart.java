@@ -16,8 +16,8 @@ public class BarChart
     /** the name of the chart, to be used in the HTML code to link the javascript and the placeholder. */
     private final String chartName;
 
-    /** the label to print at the top of the chart. */
-    private String label;
+    /** the title to print at the top of the chart. */
+    private String title;
 
     /** the width to use in the current element. */
     private String width = "100%";
@@ -37,6 +37,11 @@ public class BarChart
         this.chartName = chartName;
     }
 
+    /**
+     * Make the 'script' part of the HTML page, to be placed in a sequence of scripts for the page. The data for the graph is
+     * provided in JSON format.
+     * @return String with the 'script' part of the HTML page
+     */
     public String toScriptHtml()
     {
         StringBuilder msg = new StringBuilder();
@@ -59,7 +64,7 @@ public class BarChart
         msg.append("],\n");
         msg.append("      datasets: [{\n");
         msg.append("        label: '");
-        msg.append(this.label);
+        msg.append(this.title);
         msg.append("',\n");
         msg.append("        backgroundColor: 'red',\n");
         msg.append("        borderColor: 'black',\n");
@@ -102,6 +107,10 @@ public class BarChart
         return msg.toString();
     }
 
+    /**
+     * Make the 'div' part of the HTML page, at the location where the graph is to be placed.
+     * @return String with the 'div' part of the HTML page
+     */
     public String toDivHtml()
     {
         StringBuilder msg = new StringBuilder();
@@ -139,7 +148,7 @@ public class BarChart
 
     /**
      * Set the bar heights for the bar chart. The method calls can be chained.
-     * @param values List&lt;String&gt;; the bar heights to use for the chart; each value belongs to a label with the same index
+     * @param values List&lt;Double&gt;; the bar heights to use for the chart; each value belongs to a label with the same index
      * @return BarChart for chaining the method calls
      */
     public BarChart setValues(final List<Double> values)
@@ -150,12 +159,12 @@ public class BarChart
 
     /**
      * Set the title of the bar chart, to be printed at the top. The method calls can be chained.
-     * @param label String; the title of the bar chart, to be printed at the top
+     * @param title String; the title of the bar chart, to be printed at the top
      * @return BarChart for chaining the method calls
      */
-    public BarChart setLabel(final String label)
+    public BarChart setTtile(final String title)
     {
-        this.label = label;
+        this.title = title;
         return this;
     }
 
