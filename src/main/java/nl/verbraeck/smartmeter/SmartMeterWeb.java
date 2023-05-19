@@ -21,7 +21,6 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import fi.iki.elonen.NanoHTTPD;
-import fi.iki.elonen.NanoHTTPD.Response.Status;
 import nl.verbraeck.smartmeter.chart.BarChart;
 import nl.verbraeck.smartmeter.chart.LineChart;
 
@@ -124,7 +123,7 @@ public class SmartMeterWeb extends NanoHTTPD
             {
                 try
                 {
-                    Response response = newFixedLengthResponse(Status.OK, "image/x-icon", is, -1);
+                    Response response = newChunkedResponse(NanoHTTPD.Response.Status.OK, "image/x-icon", is);
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
                             .withZone(ZoneId.of("GMT"));
                     response.addHeader("Expires", LocalDateTime.now(ZoneId.of("GMT")).plusMonths(1).format(formatter));
