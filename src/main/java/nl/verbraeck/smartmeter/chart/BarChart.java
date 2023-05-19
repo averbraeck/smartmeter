@@ -162,7 +162,7 @@ public class BarChart
      * @param title String; the title of the bar chart, to be printed at the top
      * @return BarChart for chaining the method calls
      */
-    public BarChart setTtile(final String title)
+    public BarChart setTitle(final String title)
     {
         this.title = title;
         return this;
