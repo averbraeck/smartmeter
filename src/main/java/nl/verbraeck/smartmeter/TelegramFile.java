@@ -193,13 +193,12 @@ public class TelegramFile
     }
 
     /**
-     * Read all telegrams (max 1440) for the given date. In case there are no telegrams for the given date, return the telegrams
-     * relative to the last date when telegrams were saved.
+     * Read a number of first telegrams of the day until the given date.
+     * @param targetDate LocalDate; the last date of the days to be retrieved
      * @param days int; the number of days for which the Telegrams should be retrieved
-     * @return SortedMap&lt;String, Telegram&gt;; the sorted map with the date and time as the key (formatted as "yyyyMMdd
-     *         HH:mm") to the corresponding Telegram
+     * @return List&lt;Telegram&gt;; the list of first telegrams of the day until the given date, oldest first
      */
-    public static List<Telegram> getDaysTelegrams(final int days)
+    public static List<Telegram> getStartOfDaysTelegrams(final LocalDate targetDate, final int days)
     {
         List<Telegram> telegramList = new ArrayList<>();
         try
@@ -212,7 +211,8 @@ public class TelegramFile
                 public boolean accept(final File folder, final String name)
                 {
                     File file = new File(folder, name);
-                    if (file.isFile() && name.endsWith(Constants.FILE_SUFFIX))
+                    if (file.isFile() && name.endsWith(Constants.FILE_SUFFIX) && name.substring(Constants.FILE_PREFIX.length())
+                            .substring(0, 10).compareTo(targetDate.toString()) <= 0)
                     {
                         fileMap.put(name, file);
                         return true;
@@ -250,7 +250,7 @@ public class TelegramFile
         }
         catch (Exception e)
         {
-            System.err.println("error in getTodayTelegrams(): " + e.getMessage());
+            System.err.println("error in getStartOfDaysTelegrams(): " + e.getMessage());
         }
 
         Collections.reverse(telegramList);
@@ -258,13 +258,19 @@ public class TelegramFile
     }
 
     /**
-     * Return a list of the first telegram of the first of the month for the past x months.
-     * @param months int; the number of months to retrieve.
-     * @return List of Telegrams for the given number of months; oldest first.
+     * Return a map of the first telegram of the first of the month for the past x months. Add the last telegram of provided
+     * month to the end of the list (this might give partial information for the last month). If the last month is beyond the
+     * available data, cut off at the month of the last registered data. The key is of the form yyyy-MM. The number of entries
+     * in the map is (numberOfMonths + 1).
+     * @param year int; the year of the last month for which to retrieve the data
+     * @param month int; the last month for which to retrieve the data
+     * @param numberOfMonths int; the number of months to retrieve.
+     * @return Map of Telegrams for the given number of months, including the target month; oldest first; the key is yyyy-MM.
      */
-    public static List<Telegram> getMonthsTelegrams(final int months)
+    public static SortedMap<String, Telegram> getStartOfMonthsTelegrams(final int year, final int month,
+            final int numberOfMonths)
     {
-        List<Telegram> telegramList = new ArrayList<>();
+        SortedMap<String, Telegram> telegramMap = new TreeMap<>();
         try
         {
             File dir = new File(Constants.LOCAL_FOLDER);
@@ -284,9 +290,18 @@ public class TelegramFile
                 }
             });
 
-            LocalDate now = LocalDate.now();
-            LocalDate date = LocalDate.of(now.getYear(), now.getMonth(), 1);
-            for (int i = 0; i < months; i++)
+            // get the last entry in the given month; in other words, the last entry BEFORE the first of the next month.
+            LocalDate lastDate = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1);
+            String lastKey = fileMap.floorKey(Constants.FILE_PREFIX + lastDate.toString());
+            if (lastKey == null)
+                lastKey = fileMap.lastKey();
+            LocalDate date = LocalDate.parse(lastKey.substring(Constants.FILE_PREFIX.length()).substring(0, 10));
+            SortedMap<String, Telegram> lastDayTelegrams = TelegramFile.getDayTelegrams(date);
+            Telegram lastTelegram = lastDayTelegrams.get(lastDayTelegrams.lastKey());
+            telegramMap.put(date.toString().substring(0, 7), lastTelegram);
+            date = LocalDate.of(date.getYear(), date.getMonth(), 1);
+
+            for (int i = 0; i < numberOfMonths; i++)
             {
                 String fn = Constants.FILE_PREFIX + date.toString();
                 File file = fileMap.ceilingEntry(fn).getValue();
@@ -310,18 +325,17 @@ public class TelegramFile
                 if (line.startsWith("!")) // full telegram
                 {
                     Telegram telegram = TelegramParser.parseTelegram(telegramLines);
-                    telegramList.add(telegram);
+                    telegramMap.put(date.minusMonths(1).toString().substring(0, 7), telegram);
                 }
                 date = date.minusMonths(1);
             }
         }
         catch (Exception e)
         {
-            System.err.println("error in getTodayTelegrams(): " + e.getMessage());
+            System.err.println("error in getStartOfMonthsTelegrams(): " + e.getMessage());
         }
 
-        Collections.reverse(telegramList);
-        return telegramList;
+        return telegramMap;
     }
 
 }
