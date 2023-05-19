@@ -7,9 +7,13 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
+import java.util.Locale;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.stream.Collectors;
@@ -73,17 +77,29 @@ public class SmartMeterWeb extends NanoHTTPD
         {
             Response response = newFixedLengthResponse(readTextFile(uri));
             response.setMimeType("text/javascript");
+            DateTimeFormatter formatter =
+                    DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH).withZone(ZoneId.of("GMT"));
+            response.addHeader("Expires", LocalDateTime.now(ZoneId.of("GMT")).plusMonths(1).format(formatter));
+            response.addHeader("Cache-Control", "max-age=2592000, public");
             return response;
         }
         else if (uri.endsWith(".css"))
         {
             Response response = newFixedLengthResponse(readTextFile(uri));
             response.setMimeType("text/css");
+            DateTimeFormatter formatter =
+                    DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH).withZone(ZoneId.of("GMT"));
+            response.addHeader("Expires", LocalDateTime.now(ZoneId.of("GMT")).plusMonths(1).format(formatter));
+            response.addHeader("Cache-Control", "max-age=2592000, public");
             return response;
         }
         else if (uri.endsWith(".map"))
         {
             Response response = newFixedLengthResponse(readTextFile(uri));
+            DateTimeFormatter formatter =
+                    DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH).withZone(ZoneId.of("GMT"));
+            response.addHeader("Expires", LocalDateTime.now(ZoneId.of("GMT")).plusMonths(1).format(formatter));
+            response.addHeader("Cache-Control", "max-age=2592000, public");
             return response;
         }
         else if (uri.equals("/favicon.ico"))
@@ -94,6 +110,10 @@ public class SmartMeterWeb extends NanoHTTPD
                 try
                 {
                     Response response = newFixedLengthResponse(Status.OK, "image/x-icon", is, -1);
+                    DateTimeFormatter formatter =
+                            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH).withZone(ZoneId.of("GMT"));
+                    response.addHeader("Expires", LocalDateTime.now(ZoneId.of("GMT")).plusMonths(1).format(formatter));
+                    response.addHeader("Cache-Control", "max-age=2592000, public");
                     return response;
                 }
                 catch (Exception e)
@@ -104,18 +124,26 @@ public class SmartMeterWeb extends NanoHTTPD
         }
         if (uri.startsWith("/electricity"))
         {
-            return newFixedLengthResponse(electricity(date));
+            Response response = newFixedLengthResponse(electricity(date));
+            response.addHeader("Cache-Control", "no-store");
+            return response;
         }
         if (uri.startsWith("/gas"))
         {
-            return newFixedLengthResponse(gas(date));
+            Response response = newFixedLengthResponse(gas(date));
+            response.addHeader("Cache-Control", "no-store");
+            return response;
         }
         if (uri.startsWith("/comparison"))
         {
-            return newFixedLengthResponse(comparison());
+            Response response = newFixedLengthResponse(comparison());
+            response.addHeader("Cache-Control", "no-store");
+            return response;
         }
 
-        return newFixedLengthResponse(overview());
+        Response response = newFixedLengthResponse(overview());
+        response.addHeader("Cache-Control", "no-store");
+        return response;
     }
 
     /**
