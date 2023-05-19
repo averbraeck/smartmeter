@@ -63,7 +63,7 @@ public class TelegramChart
                 yList.add(0.0);
             }
             powerChart.setWidth("100%").setX(xList).setY(yList).setTitle("Power (kW)").setMax(1440.0).setTickStepSize(60)
-            .setHours(true).setFill(true).setFillColor("red");
+                    .setHours(true).setFill(true).setFillColor("red");
         }
         catch (Exception e)
         {
@@ -120,7 +120,7 @@ public class TelegramChart
                 yList.add(cumEnergy);
             }
             powerChart.setWidth("100%").setX(xList).setY(yList).setTitle("Power (kW)").setMax(1440.0).setTickStepSize(60)
-            .setHours(true).setFill(false);
+                    .setHours(true).setFill(false);
         }
         catch (Exception e)
         {
@@ -176,7 +176,7 @@ public class TelegramChart
                 yList.add(0.0);
             }
             gasChart.setWidth("100%").setX(xList).setY(yList).setTitle("Gas (m3)").setMax(1440.0).setTickStepSize(60)
-            .setHours(true).setFill(true).setFillColor("red");
+                    .setHours(true).setFill(true).setFillColor("red");
         }
         catch (Exception e)
         {
@@ -230,7 +230,7 @@ public class TelegramChart
                 yList.add(lastGas - firstGas);
             }
             gasChart.setWidth("100%").setX(xList).setY(yList).setTitle("Gas (m3)").setMax(1440.0).setTickStepSize(60)
-            .setHours(true).setFill(false).setFillColor("blue");
+                    .setHours(true).setFill(false).setFillColor("blue");
         }
         catch (Exception e)
         {
@@ -281,7 +281,7 @@ public class TelegramChart
                 yList.add(Double.NaN);
             }
             voltageChart.setWidth("100%").setX(xList).setY(yList).setTitle("Voltage L1 (V)").setMax(1440.0).setTickStepSize(60)
-            .setHours(true).setFill(false).setFillColor("green");
+                    .setHours(true).setFill(false).setFillColor("green");
         }
         catch (Exception e)
         {
@@ -361,35 +361,37 @@ public class TelegramChart
         BarChart powerChart = new BarChart("Power30BarChart");
         try
         {
-            List<Telegram> day30List = TelegramFile.getStartOfDaysTelegrams(targetDate, 30);
+            SortedMap<String, Telegram> day30Map = TelegramFile.getStartOfDaysTelegrams(targetDate, 30);
             SortedMap<String, Telegram> lastDayTelegrams = TelegramFile.getDayTelegrams(targetDate);
             Telegram lastTelegram = lastDayTelegrams.get(lastDayTelegrams.lastKey());
             List<String> labelList = new ArrayList<>();
             List<Double> tariff1List = new ArrayList<>();
             List<Double> tariff2List = new ArrayList<>();
             List<Double> totalList = new ArrayList<>();
-            double prevTariff1 = day30List.get(0).electricityTariff1kWh;
-            double prevTariff2 = day30List.get(0).electricityTariff2kWh;
+            double prevTariff1 = Double.NaN;
+            double prevTariff2 = Double.NaN;
             LocalDate date;
-            for (int i = 1; i < day30List.size(); i++)
+            boolean first = true;
+            for (String key : day30Map.keySet())
             {
-                Telegram telegram = day30List.get(i);
+                Telegram telegram = day30Map.get(key);
                 if (telegram.time.isAfter(LocalTime.of(23, 0)))
                     date = telegram.date.plus(1, ChronoUnit.DAYS);
                 else
                     date = telegram.date;
 
-                labelList.add(" " + date.minusDays(1).toString());
-
-                double t1 = telegram.electricityTariff1kWh - prevTariff1;
-                tariff1List.add(t1);
+                if (!first)
+                {
+                    labelList.add(" " + date.minusDays(1).toString());
+                    double t1 = telegram.electricityTariff1kWh - prevTariff1;
+                    tariff1List.add(t1);
+                    double t2 = telegram.electricityTariff2kWh - prevTariff2;
+                    tariff2List.add(t2);
+                    totalList.add(t1 + t2);
+                }
                 prevTariff1 = telegram.electricityTariff1kWh;
-
-                double t2 = telegram.electricityTariff2kWh - prevTariff2;
-                tariff2List.add(t2);
                 prevTariff2 = telegram.electricityTariff2kWh;
-
-                totalList.add(t1 + t2);
+                first = false;
             }
 
             // today
@@ -466,24 +468,29 @@ public class TelegramChart
         BarChart gasChart = new BarChart("Gas30BarChart");
         try
         {
-            List<Telegram> day30List = TelegramFile.getStartOfDaysTelegrams(targetDate, 30);
+            SortedMap<String, Telegram> day30Map = TelegramFile.getStartOfDaysTelegrams(targetDate, 30);
             SortedMap<String, Telegram> lastDayTelegrams = TelegramFile.getDayTelegrams(targetDate);
             Telegram lastTelegram = lastDayTelegrams.get(lastDayTelegrams.lastKey());
             List<String> labelList = new ArrayList<>();
             List<Double> valueList = new ArrayList<>();
-            double prevGas = day30List.get(0).gasDeliveredM3;
+            double prevGas = Double.NaN;
             LocalDate date;
-            for (int i = 1; i < day30List.size(); i++)
+            boolean first = true;
+            for (String key : day30Map.keySet())
             {
-                Telegram telegram = day30List.get(i);
+                Telegram telegram = day30Map.get(key);
                 if (telegram.time.isAfter(LocalTime.of(23, 0)))
                     date = telegram.date.plus(1, ChronoUnit.DAYS);
                 else
                     date = telegram.date;
 
-                labelList.add(" " + date.minusDays(1).toString());
-                valueList.add(telegram.gasDeliveredM3 - prevGas);
+                if (!first)
+                {
+                    labelList.add(" " + date.minusDays(1).toString());
+                    valueList.add(telegram.gasDeliveredM3 - prevGas);
+                }
                 prevGas = telegram.gasDeliveredM3;
+                first = false;
             }
 
             // today
