@@ -160,4 +160,12 @@ public class Telegram
         return this.date.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + " "
                 + this.time.format(DateTimeFormatter.ofPattern("HH:mm"));
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString()
+    {
+        return "Telegram [date=" + getDateTime() + "]";
+    }
+
 }
