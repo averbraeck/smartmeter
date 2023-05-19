@@ -13,9 +13,11 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import fi.iki.elonen.NanoHTTPD;
@@ -41,6 +43,16 @@ import nl.verbraeck.smartmeter.chart.LineChart;
  */
 public class SmartMeterWeb extends NanoHTTPD
 {
+    /** static buffer: first telegram per day of all days. Key = yyyy-MM-dd. */
+    public static final SortedMap<String, Telegram> FIRST_DAY_TELEGRAM_MAP = Collections.synchronizedSortedMap(new TreeMap<>());
+
+    /** static buffer: first telegram per month of all months. Key = yyyy-MM. */
+    public static final SortedMap<String, Telegram> FIRST_MONTH_TELEGRAM_MAP =
+            Collections.synchronizedSortedMap(new TreeMap<>());
+
+    /** the cached original for framework.html. */
+    public static String cachedFrameworkHtml = "";
+
     /**
      * Create a Web server on localhost using the given TCP port in Constants.
      * @throws IOException on error (e.g., port already in use)
@@ -60,6 +72,9 @@ public class SmartMeterWeb extends NanoHTTPD
         Map<String, String> parms = session.getParms();
 
         LocalDate date = LocalDate.now();
+        if (cachedFrameworkHtml.length() == 0)
+            cachedFrameworkHtml = readTextFile("/framework.html");
+
         if (parms.containsKey("date"))
         {
             try
@@ -110,8 +125,8 @@ public class SmartMeterWeb extends NanoHTTPD
                 try
                 {
                     Response response = newFixedLengthResponse(Status.OK, "image/x-icon", is, -1);
-                    DateTimeFormatter formatter =
-                            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH).withZone(ZoneId.of("GMT"));
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
+                            .withZone(ZoneId.of("GMT"));
                     response.addHeader("Expires", LocalDateTime.now(ZoneId.of("GMT")).plusMonths(1).format(formatter));
                     response.addHeader("Cache-Control", "max-age=2592000, public");
                     return response;
@@ -218,7 +233,7 @@ public class SmartMeterWeb extends NanoHTTPD
     {
         return date.equals(LocalDate.now()) ? "today"
                 : date.getDayOfWeek().name().substring(0, 1) + date.getDayOfWeek().name().substring(1, 2).toLowerCase() + " "
-                + date.getDayOfMonth() + "-" + date.getMonthValue() + "-" + date.getYear();
+                        + date.getDayOfMonth() + "-" + date.getMonthValue() + "-" + date.getYear();
     }
 
     /**
@@ -273,8 +288,7 @@ public class SmartMeterWeb extends NanoHTTPD
     {
         System.out.println("loaded page /");
 
-        String framework = readTextFile("/framework.html");
-        framework = framework.replace("#1", "active").replace("#2", "").replace("#3", "").replace("#4", "");
+        String framework = cachedFrameworkHtml.replace("#1", "active").replace("#2", "").replace("#3", "").replace("#4", "");
         StringBuilder msg = new StringBuilder();
 
         try
@@ -362,8 +376,7 @@ public class SmartMeterWeb extends NanoHTTPD
     {
         System.out.println("loaded page /electricity");
 
-        String framework = readTextFile("/framework.html");
-        framework = framework.replace("#1", "").replace("#2", "active").replace("#3", "").replace("#4", "");
+        String framework = cachedFrameworkHtml.replace("#1", "").replace("#2", "active").replace("#3", "").replace("#4", "");
 
         StringBuilder msg = new StringBuilder();
 
@@ -478,9 +491,7 @@ public class SmartMeterWeb extends NanoHTTPD
     {
         System.out.println("loaded page /gas");
 
-        String framework = readTextFile("/framework.html");
-        framework = framework.replace("#1", "").replace("#2", "").replace("#3", "active").replace("#4", "");
-
+        String framework = cachedFrameworkHtml.replace("#1", "").replace("#2", "").replace("#3", "active").replace("#4", "");
         StringBuilder msg = new StringBuilder();
 
         try
@@ -565,9 +576,7 @@ public class SmartMeterWeb extends NanoHTTPD
     {
         System.out.println("loaded page /comparison");
 
-        String framework = readTextFile("/framework.html");
-        framework = framework.replace("#1", "").replace("#2", "").replace("#3", "").replace("#4", "active");
-
+        String framework = cachedFrameworkHtml.replace("#1", "").replace("#2", "").replace("#3", "").replace("#4", "active");
         StringBuilder msg = new StringBuilder();
 
         try
