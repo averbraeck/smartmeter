@@ -138,7 +138,7 @@ public class ScatterChart
      * @param title String; the title of the scatter plot, to be printed at the top
      * @return ScatterChart for chaining the method calls
      */
-    public ScatterChart setLabel(final String title)
+    public ScatterChart setTitle(final String title)
     {
         this.title = title;
         return this;
