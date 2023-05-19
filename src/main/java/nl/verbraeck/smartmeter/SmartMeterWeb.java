@@ -202,30 +202,37 @@ public class SmartMeterWeb extends NanoHTTPD
     private static String datePicker(final LocalDate date, final String urlPrefix)
     {
         StringBuilder msg = new StringBuilder();
-        msg.append("  <div class=\"row\">\n");
-        msg.append("    <div class=\"col-md-6\">\n");
-        msg.append("      <br>\n");
-        msg.append("      Choose date: \n");
-        msg.append("      <a href=\"" + urlPrefix + "?date=" + date.minusDays(30) + "\" target=\"_self\">");
-        msg.append("-30 </a> \n");
-        msg.append("      <a href=\"" + urlPrefix + "?date=" + date.minusDays(1) + "\" target=\"_self\">");
-        msg.append("-7 </a> \n");
-        msg.append("      <a href=\"" + urlPrefix + "?date=" + date.minusDays(1) + "\" target=\"_self\">");
-        msg.append("-1 </a> \n");
-        msg.append("      " + makeDateString(date) + "\n");
-        msg.append("      <a href=\"" + urlPrefix + "?date=" + date.plusDays(1) + "\" target=\"_self\">");
-        msg.append("+1 </a> \n");
-        msg.append("      <a href=\"" + urlPrefix + "?date=" + date.plusDays(7) + "\" target=\"_self\">");
-        msg.append("+7 </a> \n");
-        msg.append("      <a href=\"" + urlPrefix + "?date=" + date.plusDays(30) + "\" target=\"_self\">");
-        msg.append("+30 </a> \n");
-        msg.append("      <a href=\"" + urlPrefix + "?date=" + LocalDate.now() + "\" target=\"_self\">");
-        msg.append("Today</a> \n");
-        msg.append("      <br>\n");
-        msg.append("    </div>\n"); // col
-        msg.append("    <div class=\"col-md-6\">\n");
-        msg.append("    </div>\n"); // col
-        msg.append("  </div>\n"); // row
+        try
+        {
+            msg.append("  <div class=\"row\">\n");
+            msg.append("    <div class=\"col-md-6\">\n");
+            msg.append("      <br>\n");
+            msg.append("      Choose date: \n");
+            msg.append("      <a href=\"" + urlPrefix + "?date=" + date.minusDays(30) + "\" target=\"_self\">");
+            msg.append("-30 </a> \n");
+            msg.append("      <a href=\"" + urlPrefix + "?date=" + date.minusDays(1) + "\" target=\"_self\">");
+            msg.append("-7 </a> \n");
+            msg.append("      <a href=\"" + urlPrefix + "?date=" + date.minusDays(1) + "\" target=\"_self\">");
+            msg.append("-1 </a> \n");
+            msg.append("      " + makeDateString(date) + "\n");
+            msg.append("      <a href=\"" + urlPrefix + "?date=" + date.plusDays(1) + "\" target=\"_self\">");
+            msg.append("+1 </a> \n");
+            msg.append("      <a href=\"" + urlPrefix + "?date=" + date.plusDays(7) + "\" target=\"_self\">");
+            msg.append("+7 </a> \n");
+            msg.append("      <a href=\"" + urlPrefix + "?date=" + date.plusDays(30) + "\" target=\"_self\">");
+            msg.append("+30 </a> \n");
+            msg.append("      <a href=\"" + urlPrefix + "?date=" + LocalDate.now() + "\" target=\"_self\">");
+            msg.append("Today</a> \n");
+            msg.append("      <br>\n");
+            msg.append("    </div>\n"); // col
+            msg.append("    <div class=\"col-md-6\">\n");
+            msg.append("    </div>\n"); // col
+            msg.append("  </div>\n"); // row
+        }
+        catch (Exception e)
+        {
+            System.err.println("Error in datePicker: " + e.getMessage());
+        }
         return msg.toString();
     }
 
@@ -240,71 +247,78 @@ public class SmartMeterWeb extends NanoHTTPD
 
         String framework = readTextFile("/framework.html");
         framework = framework.replace("#1", "active").replace("#2", "").replace("#3", "").replace("#4", "");
-
-        Telegram lastTelegram = TelegramFile.getLastTelegram();
         StringBuilder msg = new StringBuilder();
-        msg.append("<div class=\"container-fluid\" style=\"margin-top:50px\">\n");
-        msg.append("<div class=\"row\">\n");
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Overview</h2>\n");
 
-        Table overviewTable = new Table();
-        overviewTable.addRow("Electricity Tariff 1", lastTelegram.electricityTariff1kWh, "kWh");
-        overviewTable.addRow("Electricity Tariff 2", lastTelegram.electricityTariff2kWh, "kWh");
-        overviewTable.addRow("Tariff", lastTelegram.tariff == 1 ? "1 (low)" : "2 (high)");
-        overviewTable.addRow("Power", lastTelegram.powerDeliveredkW, "kW");
-        overviewTable.addRow("Voltage", lastTelegram.voltageL1, "V");
-        double currentL1 = 1000.0 * lastTelegram.powerDeliveredkW / lastTelegram.voltageL1;
-        overviewTable.addRow("Current", String.format("%.3f", currentL1), "A");
-        overviewTable.addRow("Gas Delivered", lastTelegram.gasDeliveredM3, "m<sup>3</sup>");
-        msg.append(overviewTable.table());
-        msg.append("</div>\n"); // col
+        try
+        {
+            Telegram lastTelegram = TelegramFile.getLastTelegram();
+            msg.append("<div class=\"container-fluid\" style=\"margin-top:50px\">\n");
+            msg.append("<div class=\"row\">\n");
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Overview</h2>\n");
 
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Devices</h2>\n");
-        Table deviceTable = new Table();
-        deviceTable.addRow("Electricity Device id", lastTelegram.electricityMeterId);
-        deviceTable.addRow("Gas Device id", lastTelegram.gasMeterId);
-        msg.append(deviceTable.table());
-        msg.append("</div>\n"); // col
-        msg.append("</div>\n"); // row
+            Table overviewTable = new Table();
+            overviewTable.addRow("Electricity Tariff 1", lastTelegram.electricityTariff1kWh, "kWh");
+            overviewTable.addRow("Electricity Tariff 2", lastTelegram.electricityTariff2kWh, "kWh");
+            overviewTable.addRow("Tariff", lastTelegram.tariff == 1 ? "1 (low)" : "2 (high)");
+            overviewTable.addRow("Power", lastTelegram.powerDeliveredkW, "kW");
+            overviewTable.addRow("Voltage", lastTelegram.voltageL1, "V");
+            double currentL1 = 1000.0 * lastTelegram.powerDeliveredkW / lastTelegram.voltageL1;
+            overviewTable.addRow("Current", String.format("%.3f", currentL1), "A");
+            overviewTable.addRow("Gas Delivered", lastTelegram.gasDeliveredM3, "m<sup>3</sup>");
+            msg.append(overviewTable.table());
+            msg.append("</div>\n"); // col
 
-        SortedMap<String, Telegram> todayMap = TelegramFile.getTodayTelegrams();
-        msg.append("<div class=\"row\">\n");
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Power usage today [kW]</h2>\n");
-        LineChart powerChart = TelegramChart.powerDay(todayMap, "PowerToday");
-        msg.append(powerChart.toDivHtml());
-        msg.append("</div>\n"); // col
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Devices</h2>\n");
+            Table deviceTable = new Table();
+            deviceTable.addRow("Electricity Device id", lastTelegram.electricityMeterId);
+            deviceTable.addRow("Gas Device id", lastTelegram.gasMeterId);
+            msg.append(deviceTable.table());
+            msg.append("</div>\n"); // col
+            msg.append("</div>\n"); // row
 
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Gas usage today [m3]</h2>\n");
-        LineChart gasChart = TelegramChart.gasDay(todayMap, "GasToday");
-        msg.append(gasChart.toDivHtml());
-        msg.append("</div>\n"); // col
-        msg.append("</div>\n"); // row
+            SortedMap<String, Telegram> todayMap = TelegramFile.getTodayTelegrams();
+            msg.append("<div class=\"row\">\n");
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Power usage today [kW]</h2>\n");
+            LineChart powerChart = TelegramChart.powerDay(todayMap, "PowerToday");
+            msg.append(powerChart.toDivHtml());
+            msg.append("</div>\n"); // col
 
-        msg.append("<div class=\"row\">\n");
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Cumulative power usage today [kW]</h2>\n");
-        LineChart cumPowerChart = TelegramChart.cumulativePowerDay(todayMap, "CumPowerToday");
-        msg.append(cumPowerChart.toDivHtml());
-        msg.append("</div>\n"); // col
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Gas usage today [m3]</h2>\n");
+            LineChart gasChart = TelegramChart.gasDay(todayMap, "GasToday");
+            msg.append(gasChart.toDivHtml());
+            msg.append("</div>\n"); // col
+            msg.append("</div>\n"); // row
 
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Cumulative gas usage today [m3]</h2>\n");
-        LineChart cumGasChart = TelegramChart.cumulativeGasDay(todayMap, "CumGasToday");
-        msg.append(cumGasChart.toDivHtml());
-        msg.append("</div>\n"); // col
-        msg.append("</div>\n"); // row
+            msg.append("<div class=\"row\">\n");
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Cumulative power usage today [kW]</h2>\n");
+            LineChart cumPowerChart = TelegramChart.cumulativePowerDay(todayMap, "CumPowerToday");
+            msg.append(cumPowerChart.toDivHtml());
+            msg.append("</div>\n"); // col
 
-        msg.append("<p>&nbsp;</p>");
-        msg.append("</div>\n"); // container-fluid
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Cumulative gas usage today [m3]</h2>\n");
+            LineChart cumGasChart = TelegramChart.cumulativeGasDay(todayMap, "CumGasToday");
+            msg.append(cumGasChart.toDivHtml());
+            msg.append("</div>\n"); // col
+            msg.append("</div>\n"); // row
 
-        msg.append(powerChart.toScriptHtml());
-        msg.append(gasChart.toScriptHtml());
-        msg.append(cumPowerChart.toScriptHtml());
-        msg.append(cumGasChart.toScriptHtml());
+            msg.append("<p>&nbsp;</p>");
+            msg.append("</div>\n"); // container-fluid
+
+            msg.append(powerChart.toScriptHtml());
+            msg.append(gasChart.toScriptHtml());
+            msg.append(cumPowerChart.toScriptHtml());
+            msg.append(cumGasChart.toScriptHtml());
+        }
+        catch (Exception e)
+        {
+            System.err.println("Error in overview(): " + e.getMessage());
+        }
 
         return framework.replace("<!-- #content -->", msg.toString());
     }
@@ -324,102 +338,110 @@ public class SmartMeterWeb extends NanoHTTPD
         framework = framework.replace("#1", "").replace("#2", "active").replace("#3", "").replace("#4", "");
 
         StringBuilder msg = new StringBuilder();
-        msg.append("<div class=\"container-fluid\" style=\"margin-top:50px\">\n");
 
-        SortedMap<String, Telegram> dayMap = TelegramFile.getDayTelegrams(date);
-        Telegram firstTelegram = dayMap.get(dayMap.firstKey());
-        LocalDate actualDate = firstTelegram.time.isAfter(LocalTime.of(23, 0)) ? firstTelegram.date.plus(1, ChronoUnit.DAYS)
-                : firstTelegram.date;
-        String dateString = makeDateString(actualDate);
-
-        msg.append(datePicker(actualDate, "/electricity"));
-
-        if (actualDate.equals(LocalDate.now()))
+        try
         {
-            Telegram lastTelegram = TelegramFile.getLastTelegram();
+            msg.append("<div class=\"container-fluid\" style=\"margin-top:50px\">\n");
+
+            SortedMap<String, Telegram> dayMap = TelegramFile.getDayTelegrams(date);
+            Telegram firstTelegram = dayMap.get(dayMap.firstKey());
+            LocalDate actualDate = firstTelegram.time.isAfter(LocalTime.of(23, 0)) ? firstTelegram.date.plus(1, ChronoUnit.DAYS)
+                    : firstTelegram.date;
+            String dateString = makeDateString(actualDate);
+
+            msg.append(datePicker(actualDate, "/electricity"));
+
+            if (actualDate.equals(LocalDate.now()))
+            {
+                Telegram lastTelegram = TelegramFile.getLastTelegram();
+
+                msg.append("<div class=\"row\">\n");
+                msg.append("<div class=\"col-md-6\">\n");
+                msg.append("<h2>Overview</h2>\n");
+
+                Table overviewTable = new Table();
+                overviewTable.addRow("Electricity Tariff 1", lastTelegram.electricityTariff1kWh, "kWh");
+                overviewTable.addRow("Electricity Tariff 2", lastTelegram.electricityTariff2kWh, "kWh");
+                overviewTable.addRow("Tariff", lastTelegram.tariff == 1 ? "1 (low)" : "2 (high)");
+                overviewTable.addRow("Power", lastTelegram.powerDeliveredkW, "kW");
+                overviewTable.addRow("Voltage", lastTelegram.voltageL1, "V");
+                double currentL1 = 1000.0 * lastTelegram.powerDeliveredkW / lastTelegram.voltageL1;
+                overviewTable.addRow("Current", String.format("%.3f", currentL1), "A");
+                msg.append(overviewTable.table());
+                msg.append("</div>\n"); // col
+
+                msg.append("<div class=\"col-md-6\">\n");
+                msg.append("<h2>Devices</h2>\n");
+                Table deviceTable = new Table();
+                deviceTable.addRow("Electricity Device id", lastTelegram.electricityMeterId);
+                deviceTable.addRow("\u00a0", " "); // &nbsp;
+                deviceTable.addRow("Long power failures", lastTelegram.longPowerFailuresAnyPhase);
+                deviceTable.addRow("Power failures", lastTelegram.powerFailuresAnyPhase);
+                deviceTable.addRow("Voltage sags L1", lastTelegram.voltageSagsL1);
+                deviceTable.addRow("Voltage swells L1", lastTelegram.voltageSwellsL1);
+                msg.append(deviceTable.table());
+                msg.append("</div>\n"); // col
+                msg.append("</div>\n"); // row
+            }
 
             msg.append("<div class=\"row\">\n");
             msg.append("<div class=\"col-md-6\">\n");
-            msg.append("<h2>Overview</h2>\n");
-
-            Table overviewTable = new Table();
-            overviewTable.addRow("Electricity Tariff 1", lastTelegram.electricityTariff1kWh, "kWh");
-            overviewTable.addRow("Electricity Tariff 2", lastTelegram.electricityTariff2kWh, "kWh");
-            overviewTable.addRow("Tariff", lastTelegram.tariff == 1 ? "1 (low)" : "2 (high)");
-            overviewTable.addRow("Power", lastTelegram.powerDeliveredkW, "kW");
-            overviewTable.addRow("Voltage", lastTelegram.voltageL1, "V");
-            double currentL1 = 1000.0 * lastTelegram.powerDeliveredkW / lastTelegram.voltageL1;
-            overviewTable.addRow("Current", String.format("%.3f", currentL1), "A");
-            msg.append(overviewTable.table());
+            msg.append("<h2>Power usage " + dateString + " [kW]</h2>\n");
+            LineChart powerChart = TelegramChart.powerDay(dayMap, "PowerDay");
+            msg.append(powerChart.toDivHtml());
             msg.append("</div>\n"); // col
 
             msg.append("<div class=\"col-md-6\">\n");
-            msg.append("<h2>Devices</h2>\n");
-            Table deviceTable = new Table();
-            deviceTable.addRow("Electricity Device id", lastTelegram.electricityMeterId);
-            deviceTable.addRow("\u00a0", " "); // &nbsp;
-            deviceTable.addRow("Long power failures", lastTelegram.longPowerFailuresAnyPhase);
-            deviceTable.addRow("Power failures", lastTelegram.powerFailuresAnyPhase);
-            deviceTable.addRow("Voltage sags L1", lastTelegram.voltageSagsL1);
-            deviceTable.addRow("Voltage swells L1", lastTelegram.voltageSwellsL1);
-            msg.append(deviceTable.table());
+            msg.append("<h2>Cumulative power usage " + dateString + " [kW]</h2>\n");
+            LineChart cumPowerChart = TelegramChart.cumulativePowerDay(dayMap, "CumPowerDay");
+            msg.append(cumPowerChart.toDivHtml());
             msg.append("</div>\n"); // col
             msg.append("</div>\n"); // row
+            msg.append("<p>&nbsp;</p>");
+
+            msg.append("<div class=\"row\">\n");
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Voltage L1 " + dateString + " [V]</h2>\n");
+            LineChart voltageChart = TelegramChart.voltageDay(dayMap, "VoltageDay");
+            msg.append(voltageChart.toDivHtml());
+            msg.append("</div>\n"); // col
+
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Energy usage " + dateString + " per hour [kWh]</h2>\n");
+            BarChart energyPerHourChart = TelegramChart.energyPerHourDay(dayMap, "EnergyPerHourDay");
+            msg.append(energyPerHourChart.toDivHtml());
+            msg.append("</div>\n"); // col
+            msg.append("</div>\n"); // row
+            msg.append("<p>&nbsp;</p>");
+
+            msg.append("<div class=\"row\">\n");
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Energy usage 30 days until " + dateString + " [kWh]</h2>\n");
+            BarChart energyPrev30DaysChart = TelegramChart.energyPrev30days(actualDate);
+            msg.append(energyPrev30DaysChart.toDivHtml());
+            msg.append("</div>\n"); // col
+
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Energy usage 12 months until " + dateString + " [kWh]</h2>\n");
+            BarChart energyPrev12MonthsChart = TelegramChart.energyPrev12months(actualDate);
+            msg.append(energyPrev12MonthsChart.toDivHtml());
+            msg.append("</div>\n"); // col
+            msg.append("</div>\n"); // row
+
+            msg.append("<p>&nbsp;</p>");
+            msg.append("</div>\n"); // container-fluid
+
+            msg.append(powerChart.toScriptHtml());
+            msg.append(cumPowerChart.toScriptHtml());
+            msg.append(voltageChart.toScriptHtml());
+            msg.append(energyPerHourChart.toScriptHtml());
+            msg.append(energyPrev30DaysChart.toScriptHtml());
+            msg.append(energyPrev12MonthsChart.toScriptHtml());
         }
-
-        msg.append("<div class=\"row\">\n");
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Power usage " + dateString + " [kW]</h2>\n");
-        LineChart powerChart = TelegramChart.powerDay(dayMap, "PowerDay");
-        msg.append(powerChart.toDivHtml());
-        msg.append("</div>\n"); // col
-
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Cumulative power usage " + dateString + " [kW]</h2>\n");
-        LineChart cumPowerChart = TelegramChart.cumulativePowerDay(dayMap, "CumPowerDay");
-        msg.append(cumPowerChart.toDivHtml());
-        msg.append("</div>\n"); // col
-        msg.append("</div>\n"); // row
-        msg.append("<p>&nbsp;</p>");
-
-        msg.append("<div class=\"row\">\n");
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Voltage L1 " + dateString + " [V]</h2>\n");
-        LineChart voltageChart = TelegramChart.voltageDay(dayMap, "VoltageDay");
-        msg.append(voltageChart.toDivHtml());
-        msg.append("</div>\n"); // col
-
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Energy usage " + dateString + " per hour [kWh]</h2>\n");
-        BarChart energyPerHourChart = TelegramChart.energyPerHourDay(dayMap, "EnergyPerHourDay");
-        msg.append(energyPerHourChart.toDivHtml());
-        msg.append("</div>\n"); // col
-        msg.append("</div>\n"); // row
-        msg.append("<p>&nbsp;</p>");
-
-        msg.append("<div class=\"row\">\n");
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Energy usage 30 days until " + dateString + " [kWh]</h2>\n");
-        BarChart energyPrev30DaysChart = TelegramChart.energyPrev30days(actualDate);
-        msg.append(energyPrev30DaysChart.toDivHtml());
-        msg.append("</div>\n"); // col
-
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Energy usage 12 months until " + dateString + " [kWh]</h2>\n");
-        BarChart energyPrev12MonthsChart = TelegramChart.energyPrev12months(actualDate);
-        msg.append(energyPrev12MonthsChart.toDivHtml());
-        msg.append("</div>\n"); // col
-        msg.append("</div>\n"); // row
-
-        msg.append("<p>&nbsp;</p>");
-        msg.append("</div>\n"); // container-fluid
-
-        msg.append(powerChart.toScriptHtml());
-        msg.append(cumPowerChart.toScriptHtml());
-        msg.append(voltageChart.toScriptHtml());
-        msg.append(energyPerHourChart.toScriptHtml());
-        msg.append(energyPrev30DaysChart.toScriptHtml());
-        msg.append(energyPrev12MonthsChart.toScriptHtml());
+        catch (Exception e)
+        {
+            System.err.println("Error in electricity(): " + e.getMessage());
+        }
 
         return framework.replace("<!-- #content -->", msg.toString());
     }
@@ -432,75 +454,81 @@ public class SmartMeterWeb extends NanoHTTPD
         framework = framework.replace("#1", "").replace("#2", "").replace("#3", "active").replace("#4", "");
 
         StringBuilder msg = new StringBuilder();
-        msg.append("<div class=\"container-fluid\" style=\"margin-top:50px\">\n");
 
-        SortedMap<String, Telegram> dayMap = TelegramFile.getDayTelegrams(date);
-        Telegram firstTelegram = dayMap.get(dayMap.firstKey());
-        LocalDate actualDate = firstTelegram.time.isAfter(LocalTime.of(23, 0)) ? firstTelegram.date.plus(1, ChronoUnit.DAYS)
-                : firstTelegram.date;
-        String dateString = makeDateString(actualDate);
-
-        msg.append(datePicker(actualDate, "/gas"));
-
-        if (actualDate.equals(LocalDate.now()))
+        try
         {
-            Telegram lastTelegram = TelegramFile.getLastTelegram();
+            msg.append("<div class=\"container-fluid\" style=\"margin-top:50px\">\n");
+
+            SortedMap<String, Telegram> dayMap = TelegramFile.getDayTelegrams(date);
+            Telegram firstTelegram = dayMap.get(dayMap.firstKey());
+            LocalDate actualDate = firstTelegram.time.isAfter(LocalTime.of(23, 0)) ? firstTelegram.date.plus(1, ChronoUnit.DAYS)
+                    : firstTelegram.date;
+            String dateString = makeDateString(actualDate);
+
+            msg.append(datePicker(actualDate, "/gas"));
+
+            if (actualDate.equals(LocalDate.now()))
+            {
+                Telegram lastTelegram = TelegramFile.getLastTelegram();
+
+                msg.append("<div class=\"row\">\n");
+                msg.append("<div class=\"col-md-6\">\n");
+                msg.append("<h2>Overview</h2>\n");
+
+                Table overviewTable = new Table();
+                overviewTable.addRow("Gas Delivered", lastTelegram.gasDeliveredM3, "m<sup>3</sup>");
+                msg.append(overviewTable.table());
+                msg.append("</div>\n"); // col
+
+                msg.append("<div class=\"col-md-6\">\n");
+                msg.append("<h2>Devices</h2>\n");
+                Table deviceTable = new Table();
+                deviceTable.addRow("Gas Device id", lastTelegram.gasMeterId);
+                msg.append(deviceTable.table());
+                msg.append("</div>\n"); // col
+                msg.append("</div>\n"); // row
+            }
 
             msg.append("<div class=\"row\">\n");
             msg.append("<div class=\"col-md-6\">\n");
-            msg.append("<h2>Overview</h2>\n");
-
-            Table overviewTable = new Table();
-            overviewTable.addRow("Gas Delivered", lastTelegram.gasDeliveredM3, "m<sup>3</sup>");
-            msg.append(overviewTable.table());
+            msg.append("<h2>Gas usage " + dateString + " [m3]</h2>\n");
+            LineChart gasChart = TelegramChart.gasDay(dayMap, "GasDay");
+            msg.append(gasChart.toDivHtml());
             msg.append("</div>\n"); // col
 
             msg.append("<div class=\"col-md-6\">\n");
-            msg.append("<h2>Devices</h2>\n");
-            Table deviceTable = new Table();
-            deviceTable.addRow("Gas Device id", lastTelegram.gasMeterId);
-            msg.append(deviceTable.table());
+            msg.append("<h2>Cumulative gas usage " + dateString + " [m3]</h2>\n");
+            LineChart cumGasChart = TelegramChart.cumulativeGasDay(dayMap, "CumGasDay");
+            msg.append(cumGasChart.toDivHtml());
             msg.append("</div>\n"); // col
             msg.append("</div>\n"); // row
+
+            msg.append("<div class=\"row\">\n");
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Gas usage 30 days until " + dateString + " [m3]</h2>\n");
+            BarChart gasPrev30DaysChart = TelegramChart.gasPrev30days(actualDate);
+            msg.append(gasPrev30DaysChart.toDivHtml());
+            msg.append("</div>\n"); // col
+
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Gas usage 12 months until " + dateString + " [m3]</h2>\n");
+            BarChart gasPrev12MonthsChart = TelegramChart.gasPrev12months(actualDate);
+            msg.append(gasPrev12MonthsChart.toDivHtml());
+            msg.append("</div>\n"); // col
+            msg.append("</div>\n"); // row
+
+            msg.append("<p>&nbsp;</p>");
+            msg.append("</div>\n"); // container-fluid
+
+            msg.append(gasChart.toScriptHtml());
+            msg.append(cumGasChart.toScriptHtml());
+            msg.append(gasPrev30DaysChart.toScriptHtml());
+            msg.append(gasPrev12MonthsChart.toScriptHtml());
         }
-
-        SortedMap<String, Telegram> todayMap = TelegramFile.getTodayTelegrams();
-
-        msg.append("<div class=\"row\">\n");
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Gas usage " + dateString + " [m3]</h2>\n");
-        LineChart gasChart = TelegramChart.gasDay(todayMap, "GasToday");
-        msg.append(gasChart.toDivHtml());
-        msg.append("</div>\n"); // col
-
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Cumulative gas usage " + dateString + " [m3]</h2>\n");
-        LineChart cumGasChart = TelegramChart.cumulativeGasDay(todayMap, "CumGasToday");
-        msg.append(cumGasChart.toDivHtml());
-        msg.append("</div>\n"); // col
-        msg.append("</div>\n"); // row
-
-        msg.append("<div class=\"row\">\n");
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Gas usage 30 days until " + dateString + " [m3]</h2>\n");
-        BarChart gasPrev30DaysChart = TelegramChart.gasPrev30days(actualDate);
-        msg.append(gasPrev30DaysChart.toDivHtml());
-        msg.append("</div>\n"); // col
-
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Gas usage 12 months until " + dateString + " [m3]</h2>\n");
-        BarChart gasPrev12MonthsChart = TelegramChart.gasPrev12months(actualDate);
-        msg.append(gasPrev12MonthsChart.toDivHtml());
-        msg.append("</div>\n"); // col
-        msg.append("</div>\n"); // row
-
-        msg.append("<p>&nbsp;</p>");
-        msg.append("</div>\n"); // container-fluid
-
-        msg.append(gasChart.toScriptHtml());
-        msg.append(cumGasChart.toScriptHtml());
-        msg.append(gasPrev30DaysChart.toScriptHtml());
-        msg.append(gasPrev12MonthsChart.toScriptHtml());
+        catch (Exception e)
+        {
+            System.err.println("Error in gas(): " + e.getMessage());
+        }
 
         return framework.replace("<!-- #content -->", msg.toString());
     }
@@ -512,35 +540,44 @@ public class SmartMeterWeb extends NanoHTTPD
         String framework = readTextFile("/framework.html");
         framework = framework.replace("#1", "").replace("#2", "").replace("#3", "").replace("#4", "active");
 
-        Telegram lastTelegram = TelegramFile.getLastTelegram();
         StringBuilder msg = new StringBuilder();
-        msg.append("<div class=\"container-fluid\" style=\"margin-top:50px\">\n");
-        msg.append("<div class=\"row\">\n");
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Overview</h2>\n");
 
-        Table overviewTable = new Table();
-        overviewTable.addRow("Electricity Tariff 1", lastTelegram.electricityTariff1kWh, "kWh");
-        overviewTable.addRow("Electricity Tariff 2", lastTelegram.electricityTariff2kWh, "kWh");
-        overviewTable.addRow("Tariff", lastTelegram.tariff == 1 ? "1 (low)" : "2 (high)");
-        overviewTable.addRow("Power", lastTelegram.powerDeliveredkW, "kW");
-        overviewTable.addRow("Voltage", lastTelegram.voltageL1, "V");
-        double currentL1 = 1000.0 * lastTelegram.powerDeliveredkW / lastTelegram.voltageL1;
-        overviewTable.addRow("Current", String.format("%.3f", currentL1), "A");
-        overviewTable.addRow("Gas Delivered", lastTelegram.gasDeliveredM3, "m<sup>3</sup>");
-        msg.append(overviewTable.table());
-        msg.append("</div>\n");
+        try
+        {
+            Telegram lastTelegram = TelegramFile.getLastTelegram();
 
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Devices</h2>\n");
-        Table deviceTable = new Table();
-        deviceTable.addRow("Electricity Device id", lastTelegram.electricityMeterId);
-        deviceTable.addRow("Gas Device id", lastTelegram.gasMeterId);
-        msg.append(deviceTable.table());
-        msg.append("</div>\n");
+            msg.append("<div class=\"container-fluid\" style=\"margin-top:50px\">\n");
+            msg.append("<div class=\"row\">\n");
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Overview</h2>\n");
 
-        msg.append("<p>&nbsp;</p>");
-        msg.append("</div>\n"); // container-fluid
+            Table overviewTable = new Table();
+            overviewTable.addRow("Electricity Tariff 1", lastTelegram.electricityTariff1kWh, "kWh");
+            overviewTable.addRow("Electricity Tariff 2", lastTelegram.electricityTariff2kWh, "kWh");
+            overviewTable.addRow("Tariff", lastTelegram.tariff == 1 ? "1 (low)" : "2 (high)");
+            overviewTable.addRow("Power", lastTelegram.powerDeliveredkW, "kW");
+            overviewTable.addRow("Voltage", lastTelegram.voltageL1, "V");
+            double currentL1 = 1000.0 * lastTelegram.powerDeliveredkW / lastTelegram.voltageL1;
+            overviewTable.addRow("Current", String.format("%.3f", currentL1), "A");
+            overviewTable.addRow("Gas Delivered", lastTelegram.gasDeliveredM3, "m<sup>3</sup>");
+            msg.append(overviewTable.table());
+            msg.append("</div>\n");
+
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Devices</h2>\n");
+            Table deviceTable = new Table();
+            deviceTable.addRow("Electricity Device id", lastTelegram.electricityMeterId);
+            deviceTable.addRow("Gas Device id", lastTelegram.gasMeterId);
+            msg.append(deviceTable.table());
+            msg.append("</div>\n");
+
+            msg.append("<p>&nbsp;</p>");
+            msg.append("</div>\n"); // container-fluid
+        }
+        catch (Exception e)
+        {
+            System.err.println("Error in electricity(): " + e.getMessage());
+        }
 
         return framework.replace("<!-- #content -->", msg.toString());
     }
