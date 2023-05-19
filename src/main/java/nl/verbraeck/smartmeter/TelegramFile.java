@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -193,18 +192,21 @@ public class TelegramFile
     }
 
     /**
-     * Read a number of first telegrams of the day until the given date.
+     * Read a number of first telegrams of the day until the given date. The map has the date as the key in the format
+     * yyyy-MM-dd.
      * @param targetDate LocalDate; the last date of the days to be retrieved
      * @param days int; the number of days for which the Telegrams should be retrieved
-     * @return List&lt;Telegram&gt;; the list of first telegrams of the day until the given date, oldest first
+     * @return SortedMap&lt;String, Telegram&gt;; the map of first telegrams of the day until the given date, oldest first; the
+     *         key is yyyy-MM-dd
      */
-    public static List<Telegram> getStartOfDaysTelegrams(final LocalDate targetDate, final int days)
+    public static SortedMap<String, Telegram> getStartOfDaysTelegrams(final LocalDate targetDate, final int days)
     {
-        List<Telegram> telegramList = new ArrayList<>();
+        SortedMap<String, Telegram> telegramMap = new TreeMap<>();
         try
         {
             File dir = new File(Constants.LOCAL_FOLDER);
             final TreeMap<String, File> fileMap = new TreeMap<>();
+
             dir.listFiles(new FilenameFilter()
             {
                 @Override
@@ -220,8 +222,23 @@ public class TelegramFile
                     return false;
                 }
             });
-            for (File file : fileMap.descendingMap().values())
+
+            for (String name : fileMap.descendingMap().keySet())
             {
+                if (Constants.DATA_CACHING)
+                {
+                    String key = name.substring(Constants.FILE_PREFIX.length()).substring(0, 10);
+                    Telegram telegram = SmartMeterWeb.FIRST_DAY_TELEGRAM_MAP.get(key);
+                    if (telegram != null)
+                    {
+                        telegramMap.put(key, telegram);
+                        if (telegramMap.size() >= days)
+                            break;
+                        continue;
+                    }
+                }
+
+                File file = fileMap.get(name);
                 List<String> lines = Files.readAllLines(Path.of(file.getAbsolutePath()));
                 List<String> telegramLines = new ArrayList<>();
                 String line = "";
@@ -242,9 +259,12 @@ public class TelegramFile
                 if (line.startsWith("!")) // full telegram
                 {
                     Telegram telegram = TelegramParser.parseTelegram(telegramLines);
-                    telegramList.add(telegram);
+                    String key = name.substring(Constants.FILE_PREFIX.length()).substring(0, 10);
+                    telegramMap.put(key, telegram);
+                    if (Constants.DATA_CACHING)
+                        SmartMeterWeb.FIRST_DAY_TELEGRAM_MAP.put(key, telegram);
                 }
-                if (telegramList.size() >= days)
+                if (telegramMap.size() >= days)
                     break;
             }
         }
@@ -253,8 +273,7 @@ public class TelegramFile
             System.err.println("error in getStartOfDaysTelegrams(): " + e.getMessage());
         }
 
-        Collections.reverse(telegramList);
-        return telegramList;
+        return telegramMap;
     }
 
     /**
@@ -305,6 +324,19 @@ public class TelegramFile
             {
                 String fn = Constants.FILE_PREFIX + date.toString();
                 File file = fileMap.ceilingEntry(fn).getValue();
+
+                if (Constants.DATA_CACHING)
+                {
+                    String key = date.minusMonths(1).toString().substring(0, 7);
+                    Telegram telegram = SmartMeterWeb.FIRST_MONTH_TELEGRAM_MAP.get(key);
+                    if (telegram != null)
+                    {
+                        telegramMap.put(key, telegram);
+                        date = date.minusMonths(1);
+                        continue;
+                    }
+                }
+
                 List<String> lines = Files.readAllLines(Path.of(file.getAbsolutePath()));
                 List<String> telegramLines = new ArrayList<>();
                 String line = "";
@@ -325,7 +357,11 @@ public class TelegramFile
                 if (line.startsWith("!")) // full telegram
                 {
                     Telegram telegram = TelegramParser.parseTelegram(telegramLines);
-                    telegramMap.put(date.minusMonths(1).toString().substring(0, 7), telegram);
+                    String key = date.minusMonths(1).toString().substring(0, 7);
+                    telegramMap.put(key, telegram);
+                    if (Constants.DATA_CACHING)
+                        SmartMeterWeb.FIRST_MONTH_TELEGRAM_MAP.put(key, telegram);
+
                 }
                 date = date.minusMonths(1);
             }
