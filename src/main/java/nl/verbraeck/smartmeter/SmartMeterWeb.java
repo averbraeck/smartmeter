@@ -10,8 +10,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.stream.Collectors;
@@ -39,13 +37,18 @@ import nl.verbraeck.smartmeter.chart.LineChart;
  */
 public class SmartMeterWeb extends NanoHTTPD
 {
+    /**
+     * Create a Web server on localhost using the given TCP port in Constants.
+     * @throws IOException on error (e.g., port already in use)
+     */
     public SmartMeterWeb() throws IOException
     {
-        super(3000);
+        super(Constants.SERVER_PORT);
         start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
-        System.out.println("\nRunning! Point your browsers to http://192.168.178.99:3000/ \n");
+        System.out.println("\nRunning! Point your browsers to " + Constants.SERVER_ADDRESS + "\n");
     }
 
+    /** {@inheritDoc} */
     @Override
     public Response serve(final IHTTPSession session)
     {
@@ -115,7 +118,12 @@ public class SmartMeterWeb extends NanoHTTPD
         return newFixedLengthResponse(overview());
     }
 
-    private InputStream binaryStream(final String uri)
+    /**
+     * Return a binary InputStream for a file indicated by the URI.
+     * @param uri String; the location of the file (absolute or relative path; resource; or inside jar file)
+     * @return a binary InputStream for a file indicated by the URI
+     */
+    private static InputStream binaryStream(final String uri)
     {
         System.out.println("loaded binary file " + uri);
         try
@@ -139,7 +147,12 @@ public class SmartMeterWeb extends NanoHTTPD
         }
     }
 
-    private String readTextFile(final String uri)
+    /**
+     * Return the full content of a text file indicated by the URI.
+     * @param uri String; the location of the file (absolute or relative path; resource; or inside jar file)
+     * @return String; the full content of a text file indicated by the URI
+     */
+    private static String readTextFile(final String uri)
     {
         System.out.println("loaded text file " + uri);
         URL url = URLResource.getResource(uri);
@@ -168,7 +181,60 @@ public class SmartMeterWeb extends NanoHTTPD
         }
     }
 
-    private String overview()
+    /**
+     * Return a string with 'today' or a nicely formatted date for the provided LocalDate argument.
+     * @param date LocalDate; the date to provide the formatted date for
+     * @return 'today' or a nicely formatted date for the provided LocalDate argument
+     */
+    private static String makeDateString(final LocalDate date)
+    {
+        return date.equals(LocalDate.now()) ? "today"
+                : date.getDayOfWeek().name().substring(0, 1) + date.getDayOfWeek().name().substring(1, 2).toLowerCase() + " "
+                + date.getDayOfMonth() + "-" + date.getMonthValue() + "-" + date.getYear();
+    }
+
+    /**
+     * Return the HTML code for the date picker.
+     * @param date LocalDate; the currently displayed date
+     * @param urlPrefix String; prefix of the URL; e.g., '/electricity'
+     * @return String; HTML code for the date picker
+     */
+    private static String datePicker(final LocalDate date, final String urlPrefix)
+    {
+        StringBuilder msg = new StringBuilder();
+        msg.append("  <div class=\"row\">\n");
+        msg.append("    <div class=\"col-md-6\">\n");
+        msg.append("      <br>\n");
+        msg.append("      Choose date: \n");
+        msg.append("      <a href=\"" + urlPrefix + "?date=" + date.minusDays(30) + "\" target=\"_self\">");
+        msg.append("-30 </a> \n");
+        msg.append("      <a href=\"" + urlPrefix + "?date=" + date.minusDays(1) + "\" target=\"_self\">");
+        msg.append("-7 </a> \n");
+        msg.append("      <a href=\"" + urlPrefix + "?date=" + date.minusDays(1) + "\" target=\"_self\">");
+        msg.append("-1 </a> \n");
+        msg.append("      " + makeDateString(date) + "\n");
+        msg.append("      <a href=\"" + urlPrefix + "?date=" + date.plusDays(1) + "\" target=\"_self\">");
+        msg.append("+1 </a> \n");
+        msg.append("      <a href=\"" + urlPrefix + "?date=" + date.plusDays(7) + "\" target=\"_self\">");
+        msg.append("+7 </a> \n");
+        msg.append("      <a href=\"" + urlPrefix + "?date=" + date.plusDays(30) + "\" target=\"_self\">");
+        msg.append("+30 </a> \n");
+        msg.append("      <a href=\"" + urlPrefix + "?date=" + LocalDate.now() + "\" target=\"_self\">");
+        msg.append("Today</a> \n");
+        msg.append("      <br>\n");
+        msg.append("    </div>\n"); // col
+        msg.append("    <div class=\"col-md-6\">\n");
+        msg.append("    </div>\n"); // col
+        msg.append("  </div>\n"); // row
+        return msg.toString();
+    }
+
+    /**
+     * Provide an overview page for today, with the general info, power usage, cumulative power usage, gas usage, and cumulative
+     * gas usage for today. The overview page is ALWAYS for today (or the last day when results were registered).
+     * @return String; complete HTML file with the page content
+     */
+    public static String overview()
     {
         System.out.println("loaded page /");
 
@@ -207,13 +273,13 @@ public class SmartMeterWeb extends NanoHTTPD
         msg.append("<div class=\"row\">\n");
         msg.append("<div class=\"col-md-6\">\n");
         msg.append("<h2>Power usage today [kW]</h2>\n");
-        LineChart powerChart = powerDay(todayMap, "PowerToday");
+        LineChart powerChart = TelegramChart.powerDay(todayMap, "PowerToday");
         msg.append(powerChart.toDivHtml());
         msg.append("</div>\n"); // col
 
         msg.append("<div class=\"col-md-6\">\n");
         msg.append("<h2>Gas usage today [m3]</h2>\n");
-        LineChart gasChart = gasDay(todayMap, "GasToday");
+        LineChart gasChart = TelegramChart.gasDay(todayMap, "GasToday");
         msg.append(gasChart.toDivHtml());
         msg.append("</div>\n"); // col
         msg.append("</div>\n"); // row
@@ -221,13 +287,13 @@ public class SmartMeterWeb extends NanoHTTPD
         msg.append("<div class=\"row\">\n");
         msg.append("<div class=\"col-md-6\">\n");
         msg.append("<h2>Cumulative power usage today [kW]</h2>\n");
-        LineChart cumPowerChart = cumulativePowerDay(todayMap, "CumPowerToday");
+        LineChart cumPowerChart = TelegramChart.cumulativePowerDay(todayMap, "CumPowerToday");
         msg.append(cumPowerChart.toDivHtml());
         msg.append("</div>\n"); // col
 
         msg.append("<div class=\"col-md-6\">\n");
         msg.append("<h2>Cumulative gas usage today [m3]</h2>\n");
-        LineChart cumGasChart = cumulativeGasDay(todayMap, "CumGasToday");
+        LineChart cumGasChart = TelegramChart.cumulativeGasDay(todayMap, "CumGasToday");
         msg.append(cumGasChart.toDivHtml());
         msg.append("</div>\n"); // col
         msg.append("</div>\n"); // row
@@ -243,7 +309,14 @@ public class SmartMeterWeb extends NanoHTTPD
         return framework.replace("<!-- #content -->", msg.toString());
     }
 
-    private String electricity(final LocalDate date)
+    /**
+     * Create the electricity page HTML for a given day. It contains an electricity overview, instantaneous and cumulative power
+     * usage, voltage development over the day, energy usage per hour of the day, end energy usage 30 days prior to the given
+     * day and 12 months prior to the given day.
+     * @param date LocalDate; the date for which to display the electricity page
+     * @return String; complete HTML file with the page content
+     */
+    public static String electricity(final LocalDate date)
     {
         System.out.println("loaded page /electricity");
 
@@ -253,7 +326,15 @@ public class SmartMeterWeb extends NanoHTTPD
         StringBuilder msg = new StringBuilder();
         msg.append("<div class=\"container-fluid\" style=\"margin-top:50px\">\n");
 
-        if (date.equals(LocalDate.now()))
+        SortedMap<String, Telegram> dayMap = TelegramFile.getDayTelegrams(date);
+        Telegram firstTelegram = dayMap.get(dayMap.firstKey());
+        LocalDate actualDate = firstTelegram.time.isAfter(LocalTime.of(23, 0)) ? firstTelegram.date.plus(1, ChronoUnit.DAYS)
+                : firstTelegram.date;
+        String dateString = makeDateString(actualDate);
+
+        msg.append(datePicker(actualDate, "/electricity"));
+
+        if (actualDate.equals(LocalDate.now()))
         {
             Telegram lastTelegram = TelegramFile.getLastTelegram();
 
@@ -286,18 +367,16 @@ public class SmartMeterWeb extends NanoHTTPD
             msg.append("</div>\n"); // row
         }
 
-        String dateString = date.equals(LocalDate.now()) ? "today" : date.toString();
-        SortedMap<String, Telegram> dayMap = TelegramFile.getDayTelegrams(date);
         msg.append("<div class=\"row\">\n");
         msg.append("<div class=\"col-md-6\">\n");
         msg.append("<h2>Power usage " + dateString + " [kW]</h2>\n");
-        LineChart powerChart = powerDay(dayMap, "PowerDay");
+        LineChart powerChart = TelegramChart.powerDay(dayMap, "PowerDay");
         msg.append(powerChart.toDivHtml());
         msg.append("</div>\n"); // col
 
         msg.append("<div class=\"col-md-6\">\n");
         msg.append("<h2>Cumulative power usage " + dateString + " [kW]</h2>\n");
-        LineChart cumPowerChart = cumulativePowerDay(dayMap, "CumPowerDay");
+        LineChart cumPowerChart = TelegramChart.cumulativePowerDay(dayMap, "CumPowerDay");
         msg.append(cumPowerChart.toDivHtml());
         msg.append("</div>\n"); // col
         msg.append("</div>\n"); // row
@@ -306,13 +385,13 @@ public class SmartMeterWeb extends NanoHTTPD
         msg.append("<div class=\"row\">\n");
         msg.append("<div class=\"col-md-6\">\n");
         msg.append("<h2>Voltage L1 " + dateString + " [V]</h2>\n");
-        LineChart voltageChart = voltageDay(dayMap, "VoltageDay");
+        LineChart voltageChart = TelegramChart.voltageDay(dayMap, "VoltageDay");
         msg.append(voltageChart.toDivHtml());
         msg.append("</div>\n"); // col
 
         msg.append("<div class=\"col-md-6\">\n");
         msg.append("<h2>Energy usage " + dateString + " per hour [kWh]</h2>\n");
-        BarChart energyPerHourChart = energyPerHourDay(dayMap, "EnergyPerHourDay");
+        BarChart energyPerHourChart = TelegramChart.energyPerHourDay(dayMap, "EnergyPerHourDay");
         msg.append(energyPerHourChart.toDivHtml());
         msg.append("</div>\n"); // col
         msg.append("</div>\n"); // row
@@ -321,14 +400,14 @@ public class SmartMeterWeb extends NanoHTTPD
         msg.append("<div class=\"row\">\n");
         msg.append("<div class=\"col-md-6\">\n");
         msg.append("<h2>Energy usage 30 days until " + dateString + " [kWh]</h2>\n");
-        BarChart energyLast30DaysChart = energyLast30days();
-        msg.append(energyLast30DaysChart.toDivHtml());
+        BarChart energyPrev30DaysChart = TelegramChart.energyPrev30days(actualDate);
+        msg.append(energyPrev30DaysChart.toDivHtml());
         msg.append("</div>\n"); // col
 
         msg.append("<div class=\"col-md-6\">\n");
         msg.append("<h2>Energy usage 12 months until " + dateString + " [kWh]</h2>\n");
-        BarChart energyLast12MonthsChart = energyLast12months();
-        msg.append(energyLast12MonthsChart.toDivHtml());
+        BarChart energyPrev12MonthsChart = TelegramChart.energyPrev12months(actualDate);
+        msg.append(energyPrev12MonthsChart.toDivHtml());
         msg.append("</div>\n"); // col
         msg.append("</div>\n"); // row
 
@@ -339,74 +418,79 @@ public class SmartMeterWeb extends NanoHTTPD
         msg.append(cumPowerChart.toScriptHtml());
         msg.append(voltageChart.toScriptHtml());
         msg.append(energyPerHourChart.toScriptHtml());
-        msg.append(energyLast30DaysChart.toScriptHtml());
-        msg.append(energyLast12MonthsChart.toScriptHtml());
+        msg.append(energyPrev30DaysChart.toScriptHtml());
+        msg.append(energyPrev12MonthsChart.toScriptHtml());
 
         return framework.replace("<!-- #content -->", msg.toString());
     }
 
-    private String gas(final LocalDate date)
+    public static String gas(final LocalDate date)
     {
         System.out.println("loaded page /gas");
 
         String framework = readTextFile("/framework.html");
         framework = framework.replace("#1", "").replace("#2", "").replace("#3", "active").replace("#4", "");
 
-        Telegram lastTelegram = TelegramFile.getLastTelegram();
         StringBuilder msg = new StringBuilder();
         msg.append("<div class=\"container-fluid\" style=\"margin-top:50px\">\n");
-        msg.append("<div class=\"row\">\n");
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Overview</h2>\n");
 
-        Table overviewTable = new Table();
-        overviewTable.addRow("Electricity Tariff 1", lastTelegram.electricityTariff1kWh, "kWh");
-        overviewTable.addRow("Electricity Tariff 2", lastTelegram.electricityTariff2kWh, "kWh");
-        overviewTable.addRow("Tariff", lastTelegram.tariff == 1 ? "1 (low)" : "2 (high)");
-        overviewTable.addRow("Power", lastTelegram.powerDeliveredkW, "kW");
-        overviewTable.addRow("Voltage", lastTelegram.voltageL1, "V");
-        double currentL1 = 1000.0 * lastTelegram.powerDeliveredkW / lastTelegram.voltageL1;
-        overviewTable.addRow("Current", String.format("%.3f", currentL1), "A");
-        overviewTable.addRow("Gas Delivered", lastTelegram.gasDeliveredM3, "m<sup>3</sup>");
-        msg.append(overviewTable.table());
-        msg.append("</div>\n"); // col
+        SortedMap<String, Telegram> dayMap = TelegramFile.getDayTelegrams(date);
+        Telegram firstTelegram = dayMap.get(dayMap.firstKey());
+        LocalDate actualDate = firstTelegram.time.isAfter(LocalTime.of(23, 0)) ? firstTelegram.date.plus(1, ChronoUnit.DAYS)
+                : firstTelegram.date;
+        String dateString = makeDateString(actualDate);
 
-        msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Devices</h2>\n");
-        Table deviceTable = new Table();
-        deviceTable.addRow("Electricity Device id", lastTelegram.electricityMeterId);
-        deviceTable.addRow("Gas Device id", lastTelegram.gasMeterId);
-        msg.append(deviceTable.table());
-        msg.append("</div>\n"); // col
-        msg.append("</div>\n"); // row
+        msg.append(datePicker(actualDate, "/gas"));
+
+        if (actualDate.equals(LocalDate.now()))
+        {
+            Telegram lastTelegram = TelegramFile.getLastTelegram();
+
+            msg.append("<div class=\"row\">\n");
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Overview</h2>\n");
+
+            Table overviewTable = new Table();
+            overviewTable.addRow("Gas Delivered", lastTelegram.gasDeliveredM3, "m<sup>3</sup>");
+            msg.append(overviewTable.table());
+            msg.append("</div>\n"); // col
+
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Devices</h2>\n");
+            Table deviceTable = new Table();
+            deviceTable.addRow("Gas Device id", lastTelegram.gasMeterId);
+            msg.append(deviceTable.table());
+            msg.append("</div>\n"); // col
+            msg.append("</div>\n"); // row
+        }
 
         SortedMap<String, Telegram> todayMap = TelegramFile.getTodayTelegrams();
 
         msg.append("<div class=\"row\">\n");
         msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Gas usage today [m3]</h2>\n");
-        LineChart gasChart = gasDay(todayMap, "GasToday");
+        msg.append("<h2>Gas usage " + dateString + " [m3]</h2>\n");
+        LineChart gasChart = TelegramChart.gasDay(todayMap, "GasToday");
         msg.append(gasChart.toDivHtml());
         msg.append("</div>\n"); // col
 
         msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Cumulative gas usage today [m3]</h2>\n");
-        LineChart cumGasChart = cumulativeGasDay(todayMap, "CumGasToday");
+        msg.append("<h2>Cumulative gas usage " + dateString + " [m3]</h2>\n");
+        LineChart cumGasChart = TelegramChart.cumulativeGasDay(todayMap, "CumGasToday");
         msg.append(cumGasChart.toDivHtml());
         msg.append("</div>\n"); // col
         msg.append("</div>\n"); // row
 
         msg.append("<div class=\"row\">\n");
         msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Gas usage last 30 days [m3]</h2>\n");
-        BarChart gasLast30DaysChart = gasLast30days();
-        msg.append(gasLast30DaysChart.toDivHtml());
+        msg.append("<h2>Gas usage 30 days until " + dateString + " [m3]</h2>\n");
+        BarChart gasPrev30DaysChart = TelegramChart.gasPrev30days(actualDate);
+        msg.append(gasPrev30DaysChart.toDivHtml());
         msg.append("</div>\n"); // col
 
         msg.append("<div class=\"col-md-6\">\n");
-        msg.append("<h2>Gas usage last 12 months [m3]</h2>\n");
-        BarChart gasLast12MonthsChart = gasLast12months();
-        msg.append(gasLast12MonthsChart.toDivHtml());
+        msg.append("<h2>Gas usage 12 months until " + dateString + " [m3]</h2>\n");
+        BarChart gasPrev12MonthsChart = TelegramChart.gasPrev12months(actualDate);
+        msg.append(gasPrev12MonthsChart.toDivHtml());
         msg.append("</div>\n"); // col
         msg.append("</div>\n"); // row
 
@@ -415,13 +499,13 @@ public class SmartMeterWeb extends NanoHTTPD
 
         msg.append(gasChart.toScriptHtml());
         msg.append(cumGasChart.toScriptHtml());
-        msg.append(gasLast30DaysChart.toScriptHtml());
-        msg.append(gasLast12MonthsChart.toScriptHtml());
+        msg.append(gasPrev30DaysChart.toScriptHtml());
+        msg.append(gasPrev12MonthsChart.toScriptHtml());
 
         return framework.replace("<!-- #content -->", msg.toString());
     }
 
-    private String comparison()
+    public static String comparison()
     {
         System.out.println("loaded page /comparison");
 
@@ -461,411 +545,10 @@ public class SmartMeterWeb extends NanoHTTPD
         return framework.replace("<!-- #content -->", msg.toString());
     }
 
-    private LineChart powerDay(final SortedMap<String, Telegram> dayMap, final String name)
-    {
-        LineChart powerChart = new LineChart(name);
-        List<Double> xList = new ArrayList<>();
-        List<Double> yList = new ArrayList<>();
-        double minutes = 0.0;
-        LocalDate date = null;
-        for (Map.Entry<String, Telegram> entry : dayMap.entrySet())
-        {
-            if (date == null)
-            {
-                if (entry.getValue().time.isAfter(LocalTime.of(23, 0)))
-                    date = entry.getValue().date.plus(1, ChronoUnit.DAYS);
-                else
-                    date = entry.getValue().date;
-            }
-            if (date.equals(entry.getValue().date))
-            {
-                minutes = Math.rint(entry.getValue().time.toSecondOfDay() / 60.0);
-                xList.add(minutes);
-                yList.add(entry.getValue().powerDeliveredkW);
-            }
-            else
-            {
-                System.out.println("Date: " + entry.getValue().date + " not equal to first date: " + date);
-            }
-        }
-        while (minutes < 1440.0)
-        {
-            minutes = Math.rint(minutes + 1.000001);
-            xList.add(minutes);
-            yList.add(0.0);
-        }
-        powerChart.setWidth("100%").setX(xList).setY(yList).setTitle("Power (kW)").setMax(1440.0).setTickStepSize(60).setHours(true)
-        .setFill(true).setFillColor("red");
-        return powerChart;
-    }
-
-    private LineChart cumulativePowerDay(final SortedMap<String, Telegram> dayMap, final String name)
-    {
-        LineChart powerChart = new LineChart(name);
-        List<Double> xList = new ArrayList<>();
-        List<Double> yList = new ArrayList<>();
-        double minutes = 0.0;
-        double cumEnergy = 0.0;
-        LocalDate date = null;
-        double firstEnergy =
-                dayMap.get(dayMap.firstKey()).electricityTariff1kWh + dayMap.get(dayMap.firstKey()).electricityTariff2kWh;
-        for (Map.Entry<String, Telegram> entry : dayMap.entrySet())
-        {
-            if (date == null)
-            {
-                if (entry.getValue().time.isAfter(LocalTime.of(23, 0)))
-                    date = entry.getValue().date.plus(1, ChronoUnit.DAYS);
-                else
-                    date = entry.getValue().date;
-            }
-            if (date.equals(entry.getValue().date))
-            {
-                minutes = Math.rint(entry.getValue().time.toSecondOfDay() / 60.0);
-                xList.add(minutes);
-                cumEnergy = entry.getValue().electricityTariff1kWh + entry.getValue().electricityTariff2kWh - firstEnergy;
-                yList.add(cumEnergy);
-            }
-            else
-            {
-                // ignore first entry -- it is often just before midnight
-                if (minutes > 0.0)
-                    System.out.println("Date: " + entry.getValue().date + " not equal to first date: " + date);
-            }
-        }
-        while (minutes < 1440.0)
-        {
-            minutes = Math.rint(minutes + 1.000001);
-            xList.add(minutes);
-            yList.add(cumEnergy);
-        }
-        powerChart.setWidth("100%").setX(xList).setY(yList).setTitle("Power (kW)").setMax(1440.0).setTickStepSize(60).setHours(true)
-        .setFill(false);
-        return powerChart;
-    }
-
-    private LineChart gasDay(final SortedMap<String, Telegram> dayMap, final String name)
-    {
-        LineChart gasChart = new LineChart(name);
-        List<Double> xList = new ArrayList<>();
-        List<Double> yList = new ArrayList<>();
-        double minutes = 0.0;
-        LocalDate date = null;
-        double prev = -1.0;
-        LocalTime timestamp = null;
-        for (Map.Entry<String, Telegram> entry : dayMap.entrySet())
-        {
-            if (date == null)
-            {
-                if (entry.getValue().time.isAfter(LocalTime.of(23, 0)))
-                    date = entry.getValue().date.plus(1, ChronoUnit.DAYS);
-                else
-                    date = entry.getValue().date;
-            }
-            if (date.equals(entry.getValue().date))
-            {
-                minutes = Math.rint(entry.getValue().time.toSecondOfDay() / 60.0);
-                xList.add(minutes);
-                yList.add(prev == -1.0 ? 0.0 : entry.getValue().gasDeliveredM3 - prev);
-                if (!entry.getValue().gasCaptureTime.equals(timestamp))
-                    prev = entry.getValue().gasDeliveredM3;
-                timestamp = entry.getValue().gasCaptureTime;
-            }
-            else
-            {
-                System.out.println("Date: " + entry.getValue().date + " not equal to first date: " + date);
-            }
-        }
-        while (minutes < 1440.0)
-        {
-            minutes = Math.rint(minutes + 1.000001);
-            xList.add(minutes);
-            yList.add(0.0);
-        }
-        gasChart.setWidth("100%").setX(xList).setY(yList).setTitle("Gas (m3)").setMax(1440.0).setTickStepSize(60).setHours(true)
-        .setFill(true).setFillColor("red");
-        return gasChart;
-    }
-
-    private LineChart cumulativeGasDay(final SortedMap<String, Telegram> dayMap, final String name)
-    {
-        LineChart gasChart = new LineChart(name);
-        List<Double> xList = new ArrayList<>();
-        List<Double> yList = new ArrayList<>();
-        double minutes = 0.0;
-        LocalDate date = null;
-        double firstGas = dayMap.get(dayMap.firstKey()).gasDeliveredM3;
-        double lastGas = firstGas;
-        for (Map.Entry<String, Telegram> entry : dayMap.entrySet())
-        {
-            if (date == null)
-            {
-                if (entry.getValue().time.isAfter(LocalTime.of(23, 0)))
-                    date = entry.getValue().date.plus(1, ChronoUnit.DAYS);
-                else
-                    date = entry.getValue().date;
-            }
-            if (date.equals(entry.getValue().date))
-            {
-                minutes = Math.rint(entry.getValue().time.toSecondOfDay() / 60.0);
-                xList.add(minutes);
-                lastGas = entry.getValue().gasDeliveredM3;
-                yList.add(lastGas - firstGas);
-            }
-            else
-            {
-                System.out.println("Date: " + entry.getValue().date + " not equal to first date: " + date);
-            }
-        }
-        while (minutes < 1440.0)
-        {
-            minutes = Math.rint(minutes + 1.000001);
-            xList.add(minutes);
-            yList.add(lastGas - firstGas);
-        }
-        gasChart.setWidth("100%").setX(xList).setY(yList).setTitle("Gas (m3)").setMax(1440.0).setTickStepSize(60).setHours(true)
-        .setFill(false).setFillColor("blue");
-        return gasChart;
-    }
-
-    private LineChart voltageDay(final SortedMap<String, Telegram> dayMap, final String name)
-    {
-        LineChart voltageChart = new LineChart(name);
-        List<Double> xList = new ArrayList<>();
-        List<Double> yList = new ArrayList<>();
-        double minutes = 0.0;
-        LocalDate date = null;
-        for (Map.Entry<String, Telegram> entry : dayMap.entrySet())
-        {
-            if (date == null)
-            {
-                if (entry.getValue().time.isAfter(LocalTime.of(23, 0)))
-                    date = entry.getValue().date.plus(1, ChronoUnit.DAYS);
-                else
-                    date = entry.getValue().date;
-            }
-            if (date.equals(entry.getValue().date))
-            {
-                minutes = Math.rint(entry.getValue().time.toSecondOfDay() / 60.0);
-                xList.add(minutes);
-                yList.add(entry.getValue().voltageL1);
-            }
-            else
-            {
-                System.out.println("Date: " + entry.getValue().date + " not equal to first date: " + date);
-            }
-        }
-        while (minutes < 1440.0)
-        {
-            minutes = Math.rint(minutes + 1.000001);
-            xList.add(minutes);
-            yList.add(Double.NaN);
-        }
-        voltageChart.setWidth("100%").setX(xList).setY(yList).setTitle("Voltage L1 (V)").setMax(1440.0).setTickStepSize(60)
-        .setHours(true).setFill(false).setFillColor("green");
-        return voltageChart;
-    }
-
-    private BarChart energyPerHourDay(final SortedMap<String, Telegram> dayMap, final String name)
-    {
-        BarChart powerChart = new BarChart(name);
-        List<String> xList = new ArrayList<>();
-        List<Double> yList = new ArrayList<>();
-        List<Double> cList = new ArrayList<>();
-        for (int x = 0; x < 24; x++)
-        {
-            xList.add(" " + x + ":00");
-            yList.add(0.0);
-            cList.add(0.0);
-        }
-        int hour = 0;
-        double start =
-                dayMap.get(dayMap.firstKey()).electricityTariff1kWh + dayMap.get(dayMap.firstKey()).electricityTariff2kWh;
-        LocalDate date = null;
-        for (Map.Entry<String, Telegram> entry : dayMap.entrySet())
-        {
-            if (date == null)
-            {
-                if (entry.getValue().time.isAfter(LocalTime.of(23, 0)))
-                    date = entry.getValue().date.plus(1, ChronoUnit.DAYS);
-                else
-                    date = entry.getValue().date;
-            }
-            if (date.equals(entry.getValue().date))
-            {
-                hour = Math.min(23, (int) Math.round(entry.getValue().time.toSecondOfDay() / 3600.0));
-                if (hour == 0)
-                {
-                    cList.set(hour, entry.getValue().electricityTariff1kWh + entry.getValue().electricityTariff2kWh);
-                    yList.set(hour, cList.get(hour) - start);
-                }
-                else
-                {
-                    cList.set(hour, entry.getValue().electricityTariff1kWh + entry.getValue().electricityTariff2kWh);
-                    yList.set(hour, cList.get(hour) - cList.get(hour - 1));
-                }
-            }
-            else
-            {
-                System.out.println("Date: " + entry.getValue().date + " not equal to first date: " + date);
-            }
-        }
-        powerChart.setWidth("100%").setLabels(xList).setValues(yList).setTtile("Energy (kWh)");
-        return powerChart;
-    }
-
-    private BarChart energyLast30days()
-    {
-        List<Telegram> day30List = TelegramFile.getDaysTelegrams(30);
-        Telegram lastTelegram = TelegramFile.getLastTelegram();
-        BarChart powerChart = new BarChart("Power30BarChart");
-        List<String> labelList = new ArrayList<>();
-        List<Double> tariff1List = new ArrayList<>();
-        List<Double> tariff2List = new ArrayList<>();
-        List<Double> totalList = new ArrayList<>();
-        double prevTariff1 = day30List.get(0).electricityTariff1kWh;
-        double prevTariff2 = day30List.get(0).electricityTariff2kWh;
-        LocalDate date;
-        for (int i = 1; i < day30List.size(); i++)
-        {
-            Telegram telegram = day30List.get(i);
-            if (telegram.time.isAfter(LocalTime.of(23, 0)))
-                date = telegram.date.plus(1, ChronoUnit.DAYS);
-            else
-                date = telegram.date;
-
-            labelList.add(" " + date.toString());
-
-            double t1 = telegram.electricityTariff1kWh - prevTariff1;
-            tariff1List.add(t1);
-            prevTariff1 = telegram.electricityTariff1kWh;
-
-            double t2 = telegram.electricityTariff2kWh - prevTariff2;
-            tariff2List.add(t2);
-            prevTariff2 = telegram.electricityTariff2kWh;
-
-            totalList.add(t1 + t2);
-        }
-
-        // today
-        labelList.add(lastTelegram.date.toString());
-        double t1 = lastTelegram.electricityTariff1kWh - prevTariff1;
-        tariff1List.add(t1);
-        double t2 = lastTelegram.electricityTariff2kWh - prevTariff2;
-        tariff1List.add(t2);
-        totalList.add(t1 + t2);
-
-        powerChart.setWidth("100%").setTtile("Power (kW)").setLabels(labelList).setValues(totalList);
-        return powerChart;
-    }
-
-    private BarChart energyLast12months()
-    {
-        List<Telegram> months12List = TelegramFile.getMonthsTelegrams(12);
-        Telegram lastTelegram = TelegramFile.getLastTelegram();
-        BarChart powerChart = new BarChart("Power12BarChart");
-        List<String> labelList = new ArrayList<>();
-        List<Double> tariff1List = new ArrayList<>();
-        List<Double> tariff2List = new ArrayList<>();
-        List<Double> totalList = new ArrayList<>();
-        double prevTariff1 = months12List.get(0).electricityTariff1kWh;
-        double prevTariff2 = months12List.get(0).electricityTariff2kWh;
-        LocalDate date;
-        for (int i = 1; i < months12List.size(); i++)
-        {
-            Telegram telegram = months12List.get(i);
-            if (telegram.time.isAfter(LocalTime.of(23, 0)))
-                date = telegram.date.plus(1, ChronoUnit.DAYS);
-            else
-                date = telegram.date;
-
-            labelList.add(" " + date.minusMonths(1).toString());
-
-            double t1 = telegram.electricityTariff1kWh - prevTariff1;
-            tariff1List.add(t1);
-            prevTariff1 = telegram.electricityTariff1kWh;
-
-            double t2 = telegram.electricityTariff2kWh - prevTariff2;
-            tariff2List.add(t2);
-            prevTariff2 = telegram.electricityTariff2kWh;
-
-            totalList.add(t1 + t2);
-        }
-
-        // today
-        labelList.add(lastTelegram.date.toString());
-        double t1 = lastTelegram.electricityTariff1kWh - prevTariff1;
-        tariff1List.add(t1);
-        double t2 = lastTelegram.electricityTariff2kWh - prevTariff2;
-        tariff1List.add(t2);
-        totalList.add(t1 + t2);
-
-        powerChart.setWidth("100%").setTtile("Power (kW)").setLabels(labelList).setValues(totalList);
-        return powerChart;
-    }
-
-    private BarChart gasLast30days()
-    {
-        List<Telegram> day30List = TelegramFile.getDaysTelegrams(30);
-        Telegram lastTelegram = TelegramFile.getLastTelegram();
-        BarChart gasChart = new BarChart("Gas30BarChart");
-        List<String> labelList = new ArrayList<>();
-        List<Double> valueList = new ArrayList<>();
-        double prevGas = day30List.get(0).gasDeliveredM3;
-        LocalDate date;
-        for (int i = 1; i < day30List.size(); i++)
-        {
-            Telegram telegram = day30List.get(i);
-            if (telegram.time.isAfter(LocalTime.of(23, 0)))
-                date = telegram.date.plus(1, ChronoUnit.DAYS);
-            else
-                date = telegram.date;
-
-            labelList.add(" " + date.toString());
-            valueList.add(telegram.gasDeliveredM3 - prevGas);
-            prevGas = telegram.gasDeliveredM3;
-        }
-
-        // today
-        labelList.add(lastTelegram.date.toString());
-        valueList.add(lastTelegram.gasDeliveredM3 - prevGas);
-
-        gasChart.setWidth("100%").setLabels(labelList).setValues(valueList).setTtile("Gas (m3)");
-        return gasChart;
-    }
-
-    private BarChart gasLast12months()
-    {
-        List<Telegram> months12List = TelegramFile.getMonthsTelegrams(12);
-        Telegram lastTelegram = TelegramFile.getLastTelegram();
-        BarChart gasChart = new BarChart("Gas12BarChart");
-        List<String> labelList = new ArrayList<>();
-        List<Double> gasList = new ArrayList<>();
-        double prevGas = months12List.get(0).gasDeliveredM3;
-        LocalDate date;
-        for (int i = 1; i < months12List.size(); i++)
-        {
-            Telegram telegram = months12List.get(i);
-            if (telegram.time.isAfter(LocalTime.of(23, 0)))
-                date = telegram.date.plus(1, ChronoUnit.DAYS);
-            else
-                date = telegram.date;
-
-            labelList.add(" " + date.minusMonths(1).toString());
-
-            double gas = telegram.gasDeliveredM3 - prevGas;
-            gasList.add(gas);
-            prevGas = telegram.gasDeliveredM3;
-        }
-
-        // today
-        labelList.add(lastTelegram.date.toString());
-        double gas = lastTelegram.gasDeliveredM3 - prevGas;
-        gasList.add(gas);
-
-        gasChart.setWidth("100%").setTtile("Gas (m3)").setLabels(labelList).setValues(gasList);
-        return gasChart;
-    }
-
+    /**
+     * The main program to start the web server.
+     * @param args String[]; not used
+     */
     public static void main(final String[] args)
     {
         try
