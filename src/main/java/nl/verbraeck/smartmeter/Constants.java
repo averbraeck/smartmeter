@@ -26,4 +26,7 @@ public class Constants
     /** the suffix of the telegram files. */
     public static final String FILE_SUFFIX = ".txt";
 
+    /** whether to use caching or not. */
+    public static final boolean DATA_CACHING = true;
+
 }
