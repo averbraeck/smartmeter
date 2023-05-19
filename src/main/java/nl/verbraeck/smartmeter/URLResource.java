@@ -13,7 +13,7 @@ import java.net.URL;
  * file location that was found, or null in case it was not found. It can find data in password protected locations, and when the
  * data has been moved to /resources instead of residing in the root folder.
  * <p>
- * Copyright (c) 2020-2023 Alexnder Verbraeck, Delft, the Netherlands. All rights reserved. <br>
+ * Copyright (c) 2020-2023 Alexander Verbraeck, Delft, the Netherlands. All rights reserved. <br>
  * MIT-license.
  * </p>
  * @author <a href="https://github.com/averbraeck">Alexander Verbraeck</a>

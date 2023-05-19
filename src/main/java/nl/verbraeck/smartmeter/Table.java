@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Store and format a 2-column table in HTML.
  * <p>
- * Copyright (c) 2020-2023 Alexnder Verbraeck, Delft, the Netherlands. All rights reserved. <br>
+ * Copyright (c) 2020-2023 Alexander Verbraeck, Delft, the Netherlands. All rights reserved. <br>
  * MIT-license.
  * </p>
  * @author <a href="https://github.com/averbraeck">Alexander Verbraeck</a>

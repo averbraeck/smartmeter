@@ -14,7 +14,7 @@ import nl.verbraeck.smartmeter.chart.LineChart;
 /**
  * TelegramChart makes charts from provided Telegram data.
  * <p>
- * Copyright (c) 2020-2023 Alexnder Verbraeck, Delft, the Netherlands. All rights reserved. <br>
+ * Copyright (c) 2020-2023 Alexander Verbraeck, Delft, the Netherlands. All rights reserved. <br>
  * MIT-license.
  * </p>
  * @author <a href="https://github.com/averbraeck">Alexander Verbraeck</a>
