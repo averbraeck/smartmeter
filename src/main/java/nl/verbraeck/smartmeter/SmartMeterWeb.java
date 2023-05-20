@@ -486,6 +486,12 @@ public class SmartMeterWeb extends NanoHTTPD
         return framework.replace("<!-- #content -->", msg.toString());
     }
 
+    /**
+     * Create the gas page HTML for a given day. It contains instantaneous and cumulative gas usage, gas usage per hour of the
+     * day, end gas usage 30 days prior to the given day and 12 months prior to the given day.
+     * @param date LocalDate; the date for which to display the gas page
+     * @return String; complete HTML file with the page content
+     */
     public static String gas(final LocalDate date)
     {
         System.out.println("loaded page /gas");
@@ -571,6 +577,14 @@ public class SmartMeterWeb extends NanoHTTPD
         return framework.replace("<!-- #content -->", msg.toString());
     }
 
+    /** the names of the months. */
+    private static final String[] MONTHS =
+            new String[] {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+    /**
+     * Create a max 5-year comparison page HTML for electricity usage and gas usage per month.
+     * @return String; complete HTML file with the page content
+     */
     public static String comparison()
     {
         System.out.println("loaded page /comparison");
@@ -580,39 +594,123 @@ public class SmartMeterWeb extends NanoHTTPD
 
         try
         {
-            Telegram lastTelegram = TelegramFile.getLastTelegram();
+            int currentYear = LocalDate.now().getYear();
+            int lastMonth = LocalDate.now().minusMonths(1).getMonthValue();
+            SortedMap<String, Telegram> monthTelegrams = TelegramFile.getStartOfMonthsTelegrams(currentYear, lastMonth, 60);
 
             msg.append("<div class=\"container-fluid\" style=\"margin-top:50px\">\n");
             msg.append("<div class=\"row\">\n");
             msg.append("<div class=\"col-md-6\">\n");
-            msg.append("<h2>Overview</h2>\n");
+            msg.append("<h2>Energy usage [kWh]</h2>\n");
 
-            Table overviewTable = new Table();
-            overviewTable.addRow("Electricity Tariff 1", lastTelegram.electricityTariff1kWh, "kWh");
-            overviewTable.addRow("Electricity Tariff 2", lastTelegram.electricityTariff2kWh, "kWh");
-            overviewTable.addRow("Tariff", lastTelegram.tariff == 1 ? "1 (low)" : "2 (high)");
-            overviewTable.addRow("Power", lastTelegram.powerDeliveredkW, "kW");
-            overviewTable.addRow("Voltage", lastTelegram.voltageL1, "V");
-            double currentL1 = 1000.0 * lastTelegram.powerDeliveredkW / lastTelegram.voltageL1;
-            overviewTable.addRow("Current", String.format("%.3f", currentL1), "A");
-            overviewTable.addRow("Gas Delivered", lastTelegram.gasDeliveredM3, "m<sup>3</sup>");
-            msg.append(overviewTable.table());
-            msg.append("</div>\n");
+            Matrix energyTableTotal = new Matrix(6, 14);
+            Matrix energyTableTariff1 = new Matrix(6, 14);
+            Matrix energyTableTariff2 = new Matrix(6, 14);
+            int[] totalEnergy = new int[6];
+            int[] totalTariff1 = new int[6];
+            int[] totalTariff2 = new int[6];
+            for (int i = 0; i < 12; i++)
+            {
+                energyTableTotal.setValue(0, i + 1, MONTHS[i]);
+                energyTableTariff1.setValue(0, i + 1, MONTHS[i]);
+                energyTableTariff2.setValue(0, i + 1, MONTHS[i]);
+            }
+            energyTableTotal.setValue(0, 13, "Total");
+            energyTableTariff1.setValue(0, 13, "Total");
+            energyTableTariff2.setValue(0, 13, "Total");
+            for (int i = 0; i < 5; i++)
+            {
+                energyTableTotal.setValue(5 - i, 0, currentYear - i);
+                energyTableTariff1.setValue(5 - i, 0, currentYear - i);
+                energyTableTariff2.setValue(5 - i, 0, currentYear - i);
+            }
+            boolean firstEnergy = true;
+            double prevEnergyTariff1 = Double.NaN;
+            double prevEnergyTariff2 = Double.NaN;
+            for (String key : monthTelegrams.keySet())
+            {
+                Telegram telegram = monthTelegrams.get(key);
+                int year = Integer.parseInt(key.substring(0, 4));
+                int month = Integer.parseInt(key.substring(5, 7));
+                if (!firstEnergy && year >= currentYear - 4)
+                {
+                    int t1 = (int) Math.round(telegram.electricityTariff1kWh - prevEnergyTariff1);
+                    int t2 = (int) Math.round(telegram.electricityTariff2kWh - prevEnergyTariff2);
+                    int tot = t1 + t2;
+                    int col = 5 - (currentYear - year);
+                    energyTableTotal.setValue(col, month, tot);
+                    energyTableTariff1.setValue(col, month, t1);
+                    energyTableTariff2.setValue(col, month, t2);
+                    totalEnergy[col] += tot;
+                    totalTariff1[col] += t1;
+                    totalTariff2[col] += t2;
+                }
+                prevEnergyTariff1 = telegram.electricityTariff1kWh;
+                prevEnergyTariff2 = telegram.electricityTariff2kWh;
+                firstEnergy = false;
+            }
+            for (int i = 1; i < 6; i++)
+            {
+                energyTableTotal.setValue(i, 13, totalEnergy[i]);
+                energyTableTariff1.setValue(i, 13, totalTariff1[i]);
+                energyTableTariff2.setValue(i, 13, totalTariff2[i]);
+            }
+            msg.append(energyTableTotal.table());
+            msg.append("</div>\n"); // col
 
             msg.append("<div class=\"col-md-6\">\n");
-            msg.append("<h2>Devices</h2>\n");
-            Table deviceTable = new Table();
-            deviceTable.addRow("Electricity Device id", lastTelegram.electricityMeterId);
-            deviceTable.addRow("Gas Device id", lastTelegram.gasMeterId);
-            msg.append(deviceTable.table());
-            msg.append("</div>\n");
+            msg.append("<h2>Gas usage [m3]</h2>\n");
+            Matrix gasTable = new Matrix(6, 14);
+            int[] gasTotal = new int[6];
+            for (int i = 0; i < 12; i++)
+                gasTable.setValue(0, i + 1, MONTHS[i]);
+            gasTable.setValue(0, 13, "Total");
+            for (int i = 0; i < 5; i++)
+                gasTable.setValue(5 - i, 0, currentYear - i);
+            boolean firstGas = true;
+            double prevGas = Double.NaN;
+            for (String key : monthTelegrams.keySet())
+            {
+                Telegram telegram = monthTelegrams.get(key);
+                int year = Integer.parseInt(key.substring(0, 4));
+                int month = Integer.parseInt(key.substring(5, 7));
+                if (!firstGas && year >= currentYear - 4)
+                {
+                    int gas = (int) Math.round(telegram.gasDeliveredM3 - prevGas);
+                    int col = 5 - (currentYear - year);
+                    gasTable.setValue(col, month, gas);
+                    gasTotal[col] += gas;
+                }
+                prevGas = telegram.gasDeliveredM3;
+                firstGas = false;
+            }
+            for (int i = 1; i < 6; i++)
+                gasTable.setValue(i, 13, gasTotal[i]);
+            msg.append(gasTable.table());
+            msg.append("</div>\n"); // col
+            msg.append("</div>\n"); // row
 
             msg.append("<p>&nbsp;</p>");
+
+            msg.append("<div class=\"row\">\n");
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Energy usage Tariff 1 (low) [kWh]</h2>\n");
+            msg.append(energyTableTariff1.table());
+            msg.append("</div>\n"); // col
+
+            msg.append("<div class=\"col-md-6\">\n");
+            msg.append("<h2>Energy usage Tariff 2 (high) [kWh]</h2>\n");
+            msg.append(energyTableTariff2.table());
+            msg.append("</div>\n"); // col
+            msg.append("</div>\n"); // row
+
+            msg.append("<p>&nbsp;</p>");
+
             msg.append("</div>\n"); // container-fluid
         }
         catch (Exception e)
         {
-            System.err.println("Error in electricity(): " + e.getMessage());
+            System.err.println("Error in comparison(): " + e.getMessage());
         }
 
         return framework.replace("<!-- #content -->", msg.toString());
