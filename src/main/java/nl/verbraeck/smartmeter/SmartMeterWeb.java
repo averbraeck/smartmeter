@@ -252,7 +252,7 @@ public class SmartMeterWeb extends NanoHTTPD
             msg.append("      Choose date: \n");
             msg.append("      <a href=\"" + urlPrefix + "?date=" + date.minusDays(30) + "\" target=\"_self\">");
             msg.append("-30 </a> \n");
-            msg.append("      <a href=\"" + urlPrefix + "?date=" + date.minusDays(1) + "\" target=\"_self\">");
+            msg.append("      <a href=\"" + urlPrefix + "?date=" + date.minusDays(7) + "\" target=\"_self\">");
             msg.append("-7 </a> \n");
             msg.append("      <a href=\"" + urlPrefix + "?date=" + date.minusDays(1) + "\" target=\"_self\">");
             msg.append("-1 </a> \n");
