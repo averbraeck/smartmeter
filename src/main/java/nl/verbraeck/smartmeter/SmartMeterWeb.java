@@ -21,6 +21,8 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import fi.iki.elonen.NanoHTTPD;
+import nl.verbraeck.shelly.ShellySensorsService;
+import nl.verbraeck.shelly.TemperaturePage;
 import nl.verbraeck.smartmeter.chart.BarChart;
 import nl.verbraeck.smartmeter.chart.LineChart;
 
@@ -154,6 +156,12 @@ public class SmartMeterWeb extends NanoHTTPD
             response.addHeader("Cache-Control", "no-store");
             return response;
         }
+        if (uri.startsWith("/temperature"))
+        {
+            Response response = newFixedLengthResponse(temperature(date));
+            response.addHeader("Cache-Control", "no-store");
+            return response;
+        }
 
         Response response = newFixedLengthResponse(overview());
         response.addHeader("Cache-Control", "no-store");
@@ -228,7 +236,7 @@ public class SmartMeterWeb extends NanoHTTPD
      * @param date LocalDate; the date to provide the formatted date for
      * @return 'today' or a nicely formatted date for the provided LocalDate argument
      */
-    private static String makeDateString(final LocalDate date)
+    public static String makeDateString(final LocalDate date)
     {
         return date.equals(LocalDate.now()) ? "today"
                 : date.getDayOfWeek().name().substring(0, 1) + date.getDayOfWeek().name().substring(1, 2).toLowerCase() + " "
@@ -241,7 +249,7 @@ public class SmartMeterWeb extends NanoHTTPD
      * @param urlPrefix String; prefix of the URL; e.g., '/electricity'
      * @return String; HTML code for the date picker
      */
-    private static String datePicker(final LocalDate date, final String urlPrefix)
+    public static String datePicker(final LocalDate date, final String urlPrefix)
     {
         StringBuilder msg = new StringBuilder();
         try
@@ -287,7 +295,8 @@ public class SmartMeterWeb extends NanoHTTPD
     {
         System.out.println("loaded page /");
 
-        String framework = cachedFrameworkHtml.replace("#1", "active").replace("#2", "").replace("#3", "").replace("#4", "");
+        String framework = cachedFrameworkHtml.replace("#1", "active").replace("#2", "").replace("#3", "").replace("#4", "")
+                .replace("#5", "");
         StringBuilder msg = new StringBuilder();
 
         try
@@ -316,6 +325,15 @@ public class SmartMeterWeb extends NanoHTTPD
             deviceTable.addRow("Electricity Device id", lastTelegram.electricityMeterId);
             deviceTable.addRow("Gas Device id", lastTelegram.gasMeterId);
             msg.append(deviceTable.table());
+
+            msg.append("<h2>Room climate</h2>\n");
+            java.nio.file.Path shellyDir = java.nio.file.Paths.get("shelly");
+            java.nio.file.Path shellyMap = shellyDir.resolve("shelly_map.csv");
+            // Use Europe/Amsterdam explicitly, or ZoneId.systemDefault()
+            String shellyTable = ShellySensorsService.buildLatestReadingsTableHtml(shellyDir, shellyMap,
+                    java.time.ZoneId.of("Europe/Amsterdam"));
+            msg.append(shellyTable);
+
             msg.append("</div>\n"); // col
             msg.append("</div>\n"); // row
 
@@ -375,7 +393,8 @@ public class SmartMeterWeb extends NanoHTTPD
     {
         System.out.println("loaded page /electricity");
 
-        String framework = cachedFrameworkHtml.replace("#1", "").replace("#2", "active").replace("#3", "").replace("#4", "");
+        String framework = cachedFrameworkHtml.replace("#1", "").replace("#2", "active").replace("#3", "").replace("#4", "")
+                .replace("#5", "");
 
         StringBuilder msg = new StringBuilder();
 
@@ -496,7 +515,8 @@ public class SmartMeterWeb extends NanoHTTPD
     {
         System.out.println("loaded page /gas");
 
-        String framework = cachedFrameworkHtml.replace("#1", "").replace("#2", "").replace("#3", "active").replace("#4", "");
+        String framework = cachedFrameworkHtml.replace("#1", "").replace("#2", "").replace("#3", "active").replace("#4", "")
+                .replace("#5", "");
         StringBuilder msg = new StringBuilder();
 
         try
@@ -577,6 +597,17 @@ public class SmartMeterWeb extends NanoHTTPD
         return framework.replace("<!-- #content -->", msg.toString());
     }
 
+    /**
+     * Create the gas page HTML for a given day. It contains instantaneous and cumulative gas usage, gas usage per hour of the
+     * day, end gas usage 30 days prior to the given day and 12 months prior to the given day.
+     * @param date LocalDate; the date for which to display the gas page
+     * @return String; complete HTML file with the page content
+     */
+    public static String temperature(final LocalDate date)
+    {
+        return TemperaturePage.temperature(date, cachedFrameworkHtml);
+    }
+
     /** the names of the months. */
     private static final String[] MONTHS =
             new String[] {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
@@ -589,7 +620,8 @@ public class SmartMeterWeb extends NanoHTTPD
     {
         System.out.println("loaded page /comparison");
 
-        String framework = cachedFrameworkHtml.replace("#1", "").replace("#2", "").replace("#3", "").replace("#4", "active");
+        String framework = cachedFrameworkHtml.replace("#1", "").replace("#2", "").replace("#3", "").replace("#4", "active")
+                .replace("#5", "active");
         StringBuilder msg = new StringBuilder();
 
         try
